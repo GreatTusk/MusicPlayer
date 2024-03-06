@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+            prefHeight="331.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21"
+            fx:controller="com.ch.tusk.controllers.LoadingScreenController">
+    <top>
+        <HBox fx:id="hbxTop" prefHeight="40.0" prefWidth="200.0" style="-fx-background-color: #e74c3c;"
+              BorderPane.alignment="CENTER"/>
+    </top>
+    <bottom>
+        <HBox fx:id="hbxBottom" prefHeight="40.0" prefWidth="600.0" style="-fx-background-color: #e74c3c;"
+              BorderPane.alignment="CENTER"/>
+    </bottom>
+    <center>
+        <VBox fx:id="vbxCenter" alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="20.0"
+              style="-fx-background-color: #ecf0f1;" BorderPane.alignment="CENTER">
+            <children>
+                <Label fx:id="lblProgress" alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308"
+                       text="Loading..." VBox.vgrow="ALWAYS">
+                    <font>
+                        <Font name="Roboto" size="22.0"/>
+                    </font>
+                </Label>
+                <ProgressIndicator fx:id="progressIndicator" style="-fx-accent: #f39c12;"/>
+                <Label fx:id="lblTask" alignment="CENTER" contentDisplay="CENTER" layoutX="262.0" layoutY="97.0"
+                       maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
+                    <font>
+                        <Font name="Roboto" size="22.0"/>
+                    </font>
+                </Label>
+            </children>
+            <BorderPane.margin>
+                <Insets/>
+            </BorderPane.margin>
+        </VBox>
+    </center>
+</BorderPane>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.ch.tusk</groupId>
+    <artifactId>MusicPlayer</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <!-- packaging>jar</packaging> -->
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <exec.mainClass>com.ch.tusk.main.MusicPlayerFX</exec.mainClass>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+    </properties>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+                <configuration>
+                    <release>21</release>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <stripDebug>true</stripDebug>
+                    <compress>2</compress>
+                    <noHeaderFiles>true</noHeaderFiles>
+                    <noManPages>true</noManPages>
+                    <launcher>MusicPlayerFX</launcher>
+                    <jlinkImageName>mpfx</jlinkImageName>
+                    <jlinkZipName>MusicPlayerFX</jlinkZipName>
+                    <mainClass>com.ch.tusk.main.MusicPlayerFX</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <!-- Default configuration for running -->
+                        <!-- Usage: mvn clean javafx:run -->
+                        <id>default-cli</id>
+                    </execution>
+                    <execution>
+                        <!-- Configuration for manual attach debugging -->
+                        <!-- Usage: mvn clean javafx:run@debug -->
+                        <id>debug</id>
+                        <configuration>
+                            <options>
+                                <option>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=localhost:8000
+                                </option>
+                            </options>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Configuration for automatic IDE debugging -->
+                        <id>ide-debug</id>
+                        <configuration>
+                            <options>
+                                <option>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</option>
+                            </options>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Configuration for automatic IDE profiling -->
+                        <id>ide-profile</id>
+                        <configuration>
+                            <options>
+                                <option>${profiler.jvmargs.arg1}</option>
+                                <option>${profiler.jvmargs.arg2}</option>
+                                <option>${profiler.jvmargs.arg3}</option>
+                                <option>${profiler.jvmargs.arg4}</option>
+                                <option>${profiler.jvmargs.arg5}</option>
+                            </options>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>.gitignore</exclude>
+                </excludes>
+            </resource>
+        </resources>
+    </build>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>21.0.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>21.0.2</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>21.0.2</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+            <version>21.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>21.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>21.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>uk.co.caprica</groupId>
+            <artifactId>native-streams</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>uk.co.caprica</groupId>
+            <artifactId>vlcj</artifactId>
+            <version>4.8.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>uk.co.caprica</groupId>
+            <artifactId>vlcj-javafx</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+
+
+        <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+            <type>jar</type>
+        </dependency>
+    </dependencies>
+
+
+</project>

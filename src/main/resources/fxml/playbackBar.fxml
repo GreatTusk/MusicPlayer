@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:id="vBoxPlayBackBar" minWidth="676.0" prefWidth="1000.0"
+      xmlns="http://javafx.com/javafx/21" fx:controller="com.ch.tusk.controllers.PlaybackController">
+    <children>
+        <Separator maxWidth="1.7976931348623157E308" prefWidth="200.0" VBox.vgrow="NEVER"/>
+        <HBox alignment="CENTER" maxHeight="45.0" maxWidth="1.7976931348623157E308" spacing="10.0" VBox.vgrow="NEVER">
+            <children>
+                <Label fx:id="lblCurrentTime" alignment="CENTER" contentDisplay="CENTER"
+                       maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minWidth="51.0" text="--:--:--"
+                       HBox.hgrow="NEVER">
+                    <font>
+                        <Font name="Roboto" size="13.0"/>
+                    </font>
+                </Label>
+                <ProgressBar fx:id="pbgSong" maxWidth="1.7976931348623157E308" onMouseClicked="#changeProgress"
+                             onMouseDragged="#dragProgressBar" onMouseReleased="#seekProgress" prefHeight="25.0"
+                             progress="0.0" HBox.hgrow="ALWAYS">
+                    <cursor>
+                        <Cursor fx:constant="HAND"/>
+                    </cursor>
+                </ProgressBar>
+                <Label fx:id="lblDuration" alignment="CENTER" contentDisplay="CENTER" maxHeight="1.7976931348623157E308"
+                       minWidth="51.0" text="--:--:--" HBox.hgrow="NEVER">
+                    <font>
+                        <Font name="Roboto" size="13.0"/>
+                    </font>
+                </Label>
+            </children>
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+            </padding>
+        </HBox>
+        <VBox>
+            <children>
+                <VBox alignment="BOTTOM_LEFT" maxWidth="1.7976931348623157E308" prefWidth="330.0" VBox.vgrow="NEVER">
+                    <children>
+                        <Separator maxWidth="1.7976931348623157E308" prefWidth="200.0" VBox.vgrow="NEVER"/>
+                        <HBox alignment="CENTER" fillHeight="false" maxWidth="1.7976931348623157E308" prefWidth="675.0"
+                              VBox.vgrow="NEVER">
+                            <children>
+                                <ImageView fx:id="coverArt" fitHeight="80.0" fitWidth="80.0" pickOnBounds="true"
+                                           preserveRatio="true" HBox.hgrow="NEVER">
+                                    <HBox.margin>
+                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                                    </HBox.margin>
+                                </ImageView>
+                                <Separator maxHeight="1.7976931348623157E308" minHeight="98.0" orientation="VERTICAL"
+                                           HBox.hgrow="ALWAYS"/>
+                                <VBox prefWidth="901.0" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <HBox VBox.vgrow="ALWAYS">
+                                            <VBox.margin>
+                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                                            </VBox.margin>
+                                            <children>
+                                                <Label fx:id="lblSongName" contentDisplay="CENTER"
+                                                       maxHeight="1.7976931348623157E308"
+                                                       maxWidth="1.7976931348623157E308" text="Song name"
+                                                       HBox.hgrow="ALWAYS">
+                                                    <font>
+                                                        <Font name="Microsoft Tai Le" size="24.0"/>
+                                                    </font>
+                                                    <HBox.margin>
+                                                        <Insets/>
+                                                    </HBox.margin>
+                                                </Label>
+                                                <HBox alignment="CENTER" maxHeight="50.0"
+                                                      maxWidth="1.7976931348623157E308" prefHeight="50.0"
+                                                      prefWidth="547.0" spacing="10.0" HBox.hgrow="NEVER">
+                                                    <children>
+                                                        <Label fx:id="lblVolume" alignment="CENTER"
+                                                               contentDisplay="CENTER" maxWidth="1.7976931348623157E308"
+                                                               minHeight="30.0" minWidth="30.0">
+                                                            <cursor>
+                                                                <Cursor fx:constant="HAND"/>
+                                                            </cursor>
+                                                        </Label>
+                                                        <Slider fx:id="volumeBar" prefHeight="14.0" value="100.0"
+                                                                HBox.hgrow="ALWAYS">
+                                                            <cursor>
+                                                                <Cursor fx:constant="W_RESIZE"/>
+                                                            </cursor>
+                                                        </Slider>
+                                                        <Label fx:id="lblReset" maxWidth="1.7976931348623157E308"
+                                                               minHeight="30.0" minWidth="30.0" mnemonicParsing="false">
+                                                            <cursor>
+                                                                <Cursor fx:constant="HAND"/>
+                                                            </cursor>
+                                                        </Label>
+                                                        <Label fx:id="lblRewind" maxWidth="1.7976931348623157E308"
+                                                               minHeight="30.0" minWidth="30.0" mnemonicParsing="false">
+                                                            <cursor>
+                                                                <Cursor fx:constant="HAND"/>
+                                                            </cursor>
+                                                        </Label>
+                                                        <Label fx:id="lblPreviousSong" maxWidth="1.7976931348623157E308"
+                                                               minHeight="30.0" minWidth="30.0" mnemonicParsing="false">
+                                                            <cursor>
+                                                                <Cursor fx:constant="HAND"/>
+                                                            </cursor>
+                                                        </Label>
+                                                        <Label fx:id="lblPlay" maxWidth="1.7976931348623157E308"
+                                                               minHeight="40.0" minWidth="40.0" mnemonicParsing="false">
+                                                            <cursor>
+                                                                <Cursor fx:constant="HAND"/>
+                                                            </cursor>
+                                                        </Label>
+                                                        <Label fx:id="lblNextSong" maxWidth="1.7976931348623157E308"
+                                                               minHeight="30.0" minWidth="30.0" mnemonicParsing="false">
+                                                            <cursor>
+                                                                <Cursor fx:constant="HAND"/>
+                                                            </cursor>
+                                                        </Label>
+                                                        <Label fx:id="lblForward" maxWidth="1.7976931348623157E308"
+                                                               minHeight="30.0" minWidth="30.0" mnemonicParsing="false">
+                                                            <cursor>
+                                                                <Cursor fx:constant="HAND"/>
+                                                            </cursor>
+                                                        </Label>
+                                                        <Label fx:id="lblShuffle" maxWidth="1.7976931348623157E308"
+                                                               minHeight="30.0" minWidth="30.0">
+                                                            <cursor>
+                                                                <Cursor fx:constant="HAND"/>
+                                                            </cursor>
+                                                        </Label>
+                                                        <ChoiceBox fx:id="speedPicker" maxWidth="1.7976931348623157E308"
+                                                                   minWidth="60.0" HBox.hgrow="ALWAYS">
+                                                            <cursor>
+                                                                <Cursor fx:constant="HAND"/>
+                                                            </cursor>
+                                                            <HBox.margin>
+                                                                <Insets/>
+                                                            </HBox.margin>
+                                                        </ChoiceBox>
+                                                    </children>
+                                                    <padding>
+                                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                                                    </padding>
+                                                </HBox>
+                                            </children>
+                                        </HBox>
+                                        <Separator maxWidth="1.7976931348623157E308" minHeight="-Infinity"
+                                                   minWidth="-Infinity" VBox.vgrow="NEVER">
+                                            <VBox.margin>
+                                                <Insets/>
+                                            </VBox.margin>
+                                        </Separator>
+                                        <HBox maxWidth="1.7976931348623157E308" prefWidth="626.0" VBox.vgrow="NEVER">
+                                            <children>
+                                                <Label fx:id="lblSongArtist" maxHeight="1.7976931348623157E308"
+                                                       maxWidth="1.7976931348623157E308" text="Song Artist"
+                                                       HBox.hgrow="ALWAYS">
+                                                    <font>
+                                                        <Font size="16.0"/>
+                                                    </font>
+                                                    <HBox.margin>
+                                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                                                    </HBox.margin>
+                                                </Label>
+                                                <Label fx:id="lblSongAlbum" alignment="CENTER_RIGHT"
+                                                       maxWidth="1.7976931348623157E308" text="Song Album"
+                                                       HBox.hgrow="ALWAYS">
+                                                    <font>
+                                                        <Font size="16.0"/>
+                                                    </font>
+                                                    <HBox.margin>
+                                                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                                                    </HBox.margin>
+                                                </Label>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+        <HBox fx:id="hbxStatus" maxWidth="1.7976931348623157E308" prefWidth="1000.0" VBox.vgrow="NEVER">
+            <children>
+                <Label fx:id="lblStatus" alignment="CENTER_RIGHT" contentDisplay="CENTER"
+                       maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets bottom="5.0" left="5.0" right="10.0" top="5.0"/>
+                    </HBox.margin>
+                </Label>
+            </children>
+        </HBox>
+
+    </children>
+</VBox>
