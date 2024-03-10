@@ -12,7 +12,6 @@ import javafx.application.Platform;
 import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.util.Duration;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.media.*;
@@ -28,30 +27,64 @@ import uk.co.caprica.vlcj.player.list.PlaybackMode;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
-import java.util.stream.IntStream;
 
 /**
  * @author f_776
  */
 public class MediaListPlayer {
 
-    private final MediaPlayerFactory factory;
-    private final uk.co.caprica.vlcj.player.list.MediaListPlayer mediaListPlayer;
-    private final MediaPlayer mediaPlayer;
-    private final Image[] imageArray;
-    private final ImageView imageView;
+    private MediaPlayerFactory factory;
+    private uk.co.caprica.vlcj.player.list.MediaListPlayer mediaListPlayer;
+    private MediaPlayer mediaPlayer;
+    private Image[] imageArray;
     private MediaList mediaList;
     private String previousAlbum = "";
 
 
     //private ArrayList<String> pathsArray;
-    public MediaListPlayer() {
-        imageArray = new Image[]{new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/5.png"))),
-                new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/12.png"))),
-                new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/11.png"))),
-                new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/10.png")))
-        };
 
+    /**
+     * The constructor for the MediaListPlayer class.
+     * It initializes the image array, sets up the media player, initializes the media player event listeners,
+     * sets the default player settings, and releases the initial resources.
+     */
+    public MediaListPlayer() {
+        initializeImageArray();
+        setupMediaPlayer();
+        initialize();
+        setDefaultPlayerSettings();
+        releaseInitialResources();
+    }
+
+    /**
+     * This method initializes the image array with the images located at the specified paths.
+     */
+    private void initializeImageArray() {
+        imageArray = new Image[]{
+                loadImage("/images/5.png"),
+                loadImage("/images/15.png"),
+                loadImage("/images/12.png"),
+                loadImage("/images/11.png"),
+                loadImage("/images/10.png")
+        };
+    }
+
+    /**
+     * This method loads an image from the specified path.
+     *
+     * @param path The path of the image to be loaded.
+     * @return The loaded image.
+     */
+    private Image loadImage(String path) {
+        return new Image(Objects.requireNonNull(getClass().getResourceAsStream(path)));
+    }
+
+    /**
+     * This method sets up the media player.
+     * It creates a new media player factory, media list player, media player, and media list.
+     * It then sets the media player for the media list player and sets the media list for the media list player.
+     */
+    private void setupMediaPlayer() {
         factory = new MediaPlayerFactory("--no-video");
         mediaListPlayer = factory.mediaPlayers().newMediaListPlayer();
         mediaPlayer = new AudioPlayerComponent().mediaPlayer();
@@ -59,43 +92,66 @@ public class MediaListPlayer {
         mediaListPlayer.mediaPlayer().setMediaPlayer(mediaPlayer);
         MediaListRef mediaListRef = mediaList.newMediaListRef();
         mediaListPlayer.list().setMediaList(mediaListRef);
+    }
 
-        initialize();
-
+    /**
+     * This method sets the default settings for the media player.
+     * It sets the playback mode to loop, sets the volume to 100, and mutes the media player if it is currently muted.
+     */
+    private void setDefaultPlayerSettings() {
         mediaListPlayer.controls().setMode(PlaybackMode.LOOP);
         mediaListPlayer.mediaPlayer().mediaPlayer().audio().setVolume(100);
-
         if (mediaPlayer.audio().isMute()) {
             mediaPlayer.audio().mute();
         }
-
-        imageView = new ImageView();
-        imageView.setFitWidth(30);
-        imageView.setFitHeight(30);
-
-        mediaList.release();
-        mediaListRef.release();
-        factory.release();
-
     }
 
+    /**
+     * This method releases the initial resources used by the media list and the media player factory.
+     */
+    private void releaseInitialResources() {
+        mediaList.release();
+        mediaList.newMediaListRef().release();
+        factory.release();
+    }
+
+    /**
+     * This method creates a new MediaList using the MediaPlayerFactory.
+     *
+     * @return A new MediaList.
+     */
     public MediaList createMediaList() {
-        // Step 1: create a new MediaList from the factory
-        // Step 2: populate it (Constants.MAIN_SCENE_CONTROLLER -> openFolder/openFile)
         return factory.media().newMediaList();
     }
 
+    /**
+     * This method sets the MediaList for the MediaListPlayer.
+     * It first creates a new MediaList from the provided MediaListRef,
+     * then sets this MediaList as the MediaList for the MediaListPlayer.
+     *
+     * @param playlist The MediaListRef from which to create the new MediaList.
+     */
     public void setMediaList(MediaListRef playlist) {
-
         mediaList = playlist.newMediaList();
         mediaListPlayer.list().setMediaList(playlist);
-
     }
 
+    /**
+     * This method adds a path to the MediaList.
+     * The path should point to a folder containing media files.
+     *
+     * @param folderPath The path to the folder containing the media files.
+     */
     public void addPaths(String folderPath) {
         mediaList.media().add(folderPath);
     }
 
+    /**
+     * This method sets the playback mode for the MediaListPlayer.
+     * The playback mode determines the order in which the media in the MediaList are played.
+     *
+     * @param state The playback mode to be set.
+     */
     public void setPlaybackMode(PlaybackMode state) {
         mediaListPlayer.controls().setMode(state);
     }
@@ -108,12 +164,18 @@ public class MediaListPlayer {
             }
 
             @Override
+            /**
+             * This method is triggered when the media list player moves to the next item in the media list.
+             * It prepares the media for the next item and starts playing it.
+             *
+             * @param mediaListPlayer The media list player that is moving to the next item.
+             * @param item The media reference of the next item in the media list.
+             */
             public void nextItem(uk.co.caprica.vlcj.player.list.MediaListPlayer mediaListPlayer, MediaRef item) {
                 mediaListPlayer.submit(() -> {
                     prepareMedia(matchReference(item));
                     start();
                 });
-
             }
 
             @Override
@@ -165,24 +227,35 @@ public class MediaListPlayer {
             }
 
             @Override
+            /*
+             * This method is triggered when the media player has finished playing the current media.
+             * It selects the next item in the media list to be played.
+             * If the current item is the last item in the list, it wraps around and selects the first item.
+             *
+             * @param mediaPlayer The media player that has finished playing the current media.
+             */
             public void finished(MediaPlayer mediaPlayer) {
                 try {
+                    // Get the selection model of the media tree view
                     MultipleSelectionModel<TreeItem<String>> selectionModel = Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel();
-
+                    // Get the currently selected item
                     TreeItem<String> selectedItem = selectionModel.getSelectedItem();
-
+                    // Get the parent of the selected item
                     TreeItem<String> parentItem = selectedItem.getParent();
+                    // Get the first child of the parent item
+                    TreeItem<String> firstChild = parentItem.getChildren().getFirst();
+                    // Get the last child of the parent item
+                    TreeItem<String> lastChild = parentItem.getChildren().getLast();
 
-                    if (parentItem.getChildren().getLast().equals(selectedItem)) {
-
-                        selectionModel.select(parentItem.getChildren().getFirst());
-
+                    // If the selected item is the last child, select the first child
+                    if (lastChild.equals(selectedItem)) {
+                        selectionModel.select(firstChild);
                     } else {
+                        // Otherwise, select the next sibling of the selected item
                         selectionModel.selectNext();
                     }
                 } catch (Exception ignored) {
                 }
-
             }
 
             @Override
@@ -228,31 +301,22 @@ public class MediaListPlayer {
 
             @Override
             public void muted(MediaPlayer mediaPlayer, boolean muted) {
-//                if (!muted) {
-//                    Constants.PLAYBACK_CONTROLLER.setVolume(mediaPlayer.audio().volume());
-//                } else {
-//                    Constants.PLAYBACK_CONTROLLER.setVolume(0);
-//                }
-
+                Platform.runLater(() -> Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageArray[0]));
             }
 
             @Override
             public void volumeChanged(MediaPlayer mediaPlayer, float volume) {
 
-                if (volume != -1) {
+                if (volume != -1 && !isMuted()) {
                     Platform.runLater(() -> {
                         if (volume == 0) {
-                            imageView.setImage(imageArray[0]);
-                            Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageView);
+                            Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageArray[1]);
                         } else if (volume < 0.33) {
-                            imageView.setImage(imageArray[1]);
-                            Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageView);
+                            Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageArray[2]);
                         } else if (volume < 0.66) {
-                            imageView.setImage(imageArray[2]);
-                            Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageView);
-                        } else {
-                            imageView.setImage(imageArray[3]);
-                            Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageView);
+                            Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageArray[3]);
+                        } else if (volume <= 1){
+                            Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageArray[4]);
                         }
                     });
                 }
@@ -370,7 +434,6 @@ public class MediaListPlayer {
 
             @Override
             public void mediaFreed(Media media, MediaRef mr) {
-
             }
 
             @Override
@@ -415,7 +478,6 @@ public class MediaListPlayer {
     public void stopMedia() {
         if (mediaPlayer.status().isPlaying()) {
             mediaListPlayer.controls().stop();
-            //Constants.PLAYBACK_CONTROLLER.backToDefault();
         }
     }
 
@@ -531,7 +593,7 @@ public class MediaListPlayer {
 
     }
 
-    public void play(String mrl){
+    public void play(String mrl) {
 
         mediaPlayer.media().startPaused(mrl);
         mediaPlayer.controls().play();
@@ -539,6 +601,7 @@ public class MediaListPlayer {
 
     public void mute() {
         mediaPlayer.audio().mute();
+
     }
 
     public boolean isMuted() {
@@ -561,7 +624,12 @@ public class MediaListPlayer {
 
     public int matchReference(String media) {
         List<String> itemsInPlaylist = getItemsInPlaylist();
-        return IntStream.range(0, itemsInPlaylist.size()).filter(i -> StringFormatter.getFileNameFromMrl(itemsInPlaylist.get(i)).equals(media)).findFirst().orElse(-1);
+        for (int i = 0; i < itemsInPlaylist.size(); i++) {
+            if (StringFormatter.getFileNameFromMrl(itemsInPlaylist.get(i)).equals(media)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private int matchReference() {
@@ -586,17 +654,28 @@ public class MediaListPlayer {
         return mediaPlayer.audio().volume();
     }
 
+    /**
+     * This method is used to set the volume of the media player.
+     * It first checks if the media player is currently playing any media.
+     * If media is playing, it sets the volume to the specified value.
+     *
+     * @param volume The volume level to be set. The value should be between 0 and 100.
+     */
     public void setVolume(int volume) {
         if (mediaPlayer.status().isPlaying()) {
             mediaPlayer.audio().setVolume(volume);
         }
     }
 
+    /**
+     * This method is used to get the Media Resource Locator (MRL) of the currently playing media.
+     * It first checks if the media player has any media loaded.
+     * If media is loaded, it returns the MRL of the media.
+     * If no media is loaded, it returns an empty string.
+     *
+     * @return The MRL of the currently playing media, or an empty string if no media is loaded.
+     */
     public String currentlyPlayedMrl() {
-        if (mediaPlayer.media().info() != null) {
-            return mediaPlayer.media().info().mrl();
-        }
-        return "";
+        return mediaPlayer.media().info() != null ? mediaPlayer.media().info().mrl() : "";
     }
-
 }

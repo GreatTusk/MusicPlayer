@@ -9,12 +9,12 @@ import javafx.scene.image.ImageView;
 /**
  * @author f_776
  */
-public class AlbumCoverImageView extends ImageView {
+public class IconImageView extends ImageView {
 
-    public AlbumCoverImageView() {
+    public IconImageView(double height, double width) {
         super();
-        setFitHeight(60);
-        setFitWidth(60);
+        setFitHeight(height - 10);
+        setFitWidth(width - 10);
         setSmooth(true);
         setPreserveRatio(true);
     }

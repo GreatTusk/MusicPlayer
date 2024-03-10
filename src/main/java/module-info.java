@@ -7,7 +7,6 @@ module com.ch.tusk {
 
     requires uk.co.caprica.vlcj;
     requires uk.co.caprica.vlcj.natives;
-    requires uk.co.caprica.vlcj.javafx;
     requires com.google.gson;
     requires com.sun.jna.platform;
     requires javafx.swing;

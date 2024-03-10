@@ -6,8 +6,16 @@ package com.ch.tusk.model;
 
 import java.util.List;
 
-/**
+/*
  * @author f_776
+ */
+
+/**
+ * A record representing an Album.
+ *
+ * @param albumName The name of the album.
+ * @param songs     A list of songs on the album.
+ * @param imageURL  The URL of the album's image.
  */
 public record Album(String albumName, List<String> songs, String imageURL) {
 }

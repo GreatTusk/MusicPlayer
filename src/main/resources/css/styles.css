@@ -2,8 +2,7 @@
 .label {
     -fx-font-family: "Roboto";
     -fx-font-size: 18;
-    -fx-text-fill: #333333;
-    /* Dark gray text color */
+    -fx-text-fill: #ffffff; /* White text color */
 }
 
 /* Styling for #lblCurrentTime and #lblDuration */
@@ -11,79 +10,82 @@
 #lblDuration {
     -fx-font-family: "Roboto";
     -fx-font-size: 13;
-    -fx-text-fill: #333333;
-    /* Dark gray text color */
+    -fx-text-fill: #ffffff; /* White text color */
 }
 
 #lblSongName {
     -fx-font-family: "Roboto";
     -fx-font-size: 26;
-    -fx-text-fill: #333333;
-    /* Dark gray text color */
+    -fx-text-fill: #ffffff; /* White text color */
 }
 
 /* Styling for Buttons */
 .button {
     -fx-font-family: "Roboto";
     -fx-font-size: 16;
-    -fx-background-color: #e74c3c;
-    /* Red background color */
-    -fx-text-fill: #ffffff;
-    /* White text color */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
+    -fx-text-fill: #ffffff; /* White text color */
 }
 
 .button:hover {
-    -fx-background-color: #c0392b;
-    /* New background color on hover */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #4a6572); /* Yellow gradient for hover effect */
+}
+
+.button:pressed {
+    -fx-background-color: linear-gradient(to bottom right, #2c3e50, #7d7f8d);
 }
 
 /* Styling for ProgressBar */
 .progress-bar {
-    -fx-accent: #f39c12;
-    /* Orange accent color */
+    -fx-background: linear-gradient(to bottom right, #2c3e50, #5f80a9);
+    -fx-border-color: #2c3e50; /* Border color */
+    -fx-border-width: 2; /* Border width */
+    -fx-pref-width: 200; /* Preferred width */
+    -fx-pref-height: 20; /* Preferred height */
+    -fx-background-radius: 10; /* Rounded corners */
+    -fx-border-radius: 10; /* Rounded corners for border */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.6), 5, 0, 0, 1); /* Shadow effect */
+}
+
+/* Styling for ProgressBar's bar */
+.progress-bar .bar {
+    -fx-background-color: linear-gradient(to left, #517395, #7d7f8d); /* Darker color for the bar */
+    -fx-background-insets: 0, 1, 2; /* Insets for the bar */
+    -fx-background-radius: 10; /* Rounded corners for the bar */
 }
 
 /* Styling for Slider */
 .slider {
-    -fx-background-color: #ecf0f1;
-    /* Light gray background color */
-    -fx-accent: #d35400;
-    /* Orange accent color */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
+    -fx-accent: linear-gradient(to bottom right, #2c3e50, #3c3e44); /* Darker gradient accent color */
 }
 
 /* Styling for Thumb (handle) of the Slider */
 .slider .thumb {
-    -fx-background-color: #e74c3c;
-    /* Orange color for the thumb */
-    -fx-background-radius: 0;
-    /* Square-shaped thumb */
+    -fx-background-color: #3498db; /* Gradient color for the thumb */
+    -fx-background-radius: 10;
 }
 
 /* Styling for Track (bar) of the Slider */
 .slider .track {
-    -fx-background-color: #bdc3c7;
-    /* Silver color for the track */
+    -fx-background-color: linear-gradient(to left, #517395, #7d7f8d); /* Darker gradient color for the track */
 }
 
 .slider .thumb :hover {
-    -fx-background-color: #c0392b;
-    /* New background color on hover */
+    -fx-background-color: linear-gradient(to left, #517395, #7d7f8d); /* Darker gradient color on hover */
 }
 
 /* Styling for TextArea */
 .text-area {
     -fx-font-family: "Roboto";
     -fx-font-size: 14;
-    -fx-background-color: #ffffff;
-    /* White background color */
-    -fx-text-fill: #333333;
-    /* Dark gray text color */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
+    -fx-text-fill: #ffffff; /* White text color */
 }
 
 /* Styling for BorderPane */
 .border-pane {
-    -fx-background-color: #ffffff;
-    /* White background color */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
 }
 
 /* Styling for center, top, left, right, and bottom content of BorderPane */
@@ -91,8 +93,7 @@
 .border-pane .top,
 .border-pane .left,
 .border-pane .right {
-    -fx-background-color: #ecf0f1;
-    /* Light gray background color */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
     -fx-padding: 10;
 }
 
@@ -101,43 +102,57 @@
 
 /* Styling for TreeView */
 .tree-view {
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
+    -fx-text-fill: #ffffff; /* White font color */
     -fx-font-family: "Roboto";
     -fx-font-size: 14;
-    -fx-background-color: #ffffff; /* White background color */
-    -fx-text-fill: #333333; /* Dark gray text color */
+}
+
+/* Styling for TreeItems */
+.tree-view .tree-cell {
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
+    -fx-text-fill: #ffffff; /* White font color */
 }
 
 /* Styling for selected items in TreeView */
 .tree-view .tree-cell:selected {
-    -fx-background-color: #d35400; /* Orange background color for selected items */
+    -fx-background-color: linear-gradient(to bottom right, #2c3e50, #3498db); /* Blue gradient for selected items */
     -fx-text-fill: #ffffff; /* White text color for selected items */
 }
 
-
 /* Styling for hover effect on TreeView items */
 .tree-view .tree-cell:hover {
-    -fx-background-color: #ecf0f1; /* Light gray background color on hover */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #4a6572); /* Yellow gradient for hover effect */
+}
+.tree-view .tree-cell:pressed {
+    -fx-background-color: linear-gradient(to bottom right, #2c3e50, #7d7f8d);
+}
+
+.tree-view .tree-disclosure-node .arrow {
+    -fx-background-color: #3498db; /* Blue arrow color */
+    -fx-fill: #3498db; /* Blue fill color for the arrow */
 }
 
 /* Styling for all vertical scrollbars */
 .scroll-bar:vertical {
-    -fx-background-color: #f39c12; /* Orange background color */
+    -fx-background-color: #3c3e44; /* Dark slate gray background color */
 }
 
 /* Styling for all vertical thumbs in scrollbars */
 .scroll-bar:vertical .thumb {
-    -fx-background-color: #d35400; /* Darker orange color for the thumb */
+    -fx-background-color: #3498db; /* Gradient color for the thumb */
 }
 
 /* Styling for all vertical tracks in scrollbars */
 .scroll-bar:vertical .track {
-    -fx-background-color: #ecf0f1; /* Light gray background color for the track */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background for the track */
 }
+
 
 /* Styling for all vertical increment and decrement buttons in scrollbars */
 .scroll-bar:vertical .increment-button,
 .scroll-bar:vertical .decrement-button {
-    -fx-background-color: #ffffff; /* White background color for the buttons */
+    -fx-background-color: #2c3e50; /* Midnight blue color for the buttons */
     -fx-background-insets: 0, 1, 2;
     -fx-background-radius: 0;
 }
@@ -145,20 +160,54 @@
 /* Styling for all vertical increment and decrement arrows in scrollbars */
 .scroll-bar:vertical .increment-arrow,
 .scroll-bar:vertical .decrement-arrow {
-    -fx-background-color: #333333; /* Dark gray color for the arrows */
+    -fx-background-color: #ffffff; /* White color for the arrows */
 }
 
 /* Styling for all vertical increment and decrement buttons on hover in scrollbars */
 .scroll-bar:vertical .increment-button:hover,
 .scroll-bar:vertical .decrement-button:hover {
-    -fx-background-color: #d35400; /* Orange background color on hover */
+    -fx-background-color: #3498db; /* Blue color for the buttons on hover */
+}
+
+/* Styling for all horizontal scrollbars */
+.scroll-bar:horizontal {
+    -fx-background-color: #3c3e44; /* Dark slate gray background color */
+}
+
+/* Styling for all horizontal thumbs in scrollbars */
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: #3498db; /* Midnight blue color for the thumb */
+}
+
+/* Styling for all horizontal tracks in scrollbars */
+.scroll-bar:horizontal .track {
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background for the track */
+}
+
+/* Styling for all horizontal increment and decrement buttons in scrollbars */
+.scroll-bar:horizontal .increment-button,
+.scroll-bar:horizontal .decrement-button {
+    -fx-background-color: #2c3e50; /* Midnight blue color for the buttons */
+    -fx-background-insets: 0, 1, 2;
+    -fx-background-radius: 0;
+}
+
+/* Styling for all horizontal increment and decrement arrows in scrollbars */
+.scroll-bar:horizontal .increment-arrow,
+.scroll-bar:horizontal .decrement-arrow {
+    -fx-background-color: #ffffff; /* White color for the arrows */
+}
+
+/* Styling for all horizontal increment and decrement buttons on hover in scrollbars */
+.scroll-bar:horizontal .increment-button:hover,
+.scroll-bar:horizontal .decrement-button:hover {
+    -fx-background-color: #3498db; /* Blue color for the buttons on hover */
 }
 
 
 /* Styling for MenuBar */
 .menu-bar {
-    -fx-background-color: #e74c3c;
-    /* Red background color */
+    -fx-background-color: #3498db; /* Blue color for the buttons on hover */
 }
 
 /* Styling for labels, checkboxes, and menu items in menu bar and context menu */
@@ -180,12 +229,8 @@
 
 .menu-bar .menu-item:hover,
 .menu-bar .menu-item:pressed {
-    -fx-background-color: #c0392b;
+    -fx-background-color: #2980b9;
     /* Slightly darker red background color on hover or press */
-}
-
-#hbxStatus {
-    -fx-background-color: #e74c3c;
 }
 
 #lblStatus {
@@ -194,7 +239,7 @@
 }
 
 .menu-bar .menu :hover {
-    -fx-background-color: #c0392b;
+    -fx-background-color: #2980b9;
     /* New background color on hover */
 }
 
@@ -205,10 +250,12 @@
 
 /* Styling for ChoiceBox */
 .choice-box {
-    -fx-background-color: #e74c3c;
-    /* Red background color */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
 }
 
+.choice-box:hover {
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #4a6572); /* Yellow gradient for hover effect */ /* Yellow gradient on hover */
+}
 
 .choice-box .label {
     -fx-font-family: "Roboto";
@@ -220,54 +267,67 @@
 .choice-box-popup .menu-item {
     -fx-font-family: "Roboto";
     -fx-font-size: 14;
-    -fx-text-fill: #333333;
-    /* Dark gray text color for choice box options */
-    -fx-background-color: #e74c3c;
-    /* Orange background color for options */
+    -fx-text-fill: #ffffff; /* White text color for choice box options */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background for options */
 }
 
 .choice-box-popup .menu-item:hover,
 .choice-box-popup .menu-item:pressed {
-    -fx-background-color: #c0392b;
-    /* Slightly darker red background color on hover or press */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background on hover or press */
 }
 
 
 .context-menu {
-    -fx-background-color: #e74c3c;
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
 }
 
 /* Sample CSS for styled-alert class */
 .styled-alert {
-    -fx-background-color: #e74c3c;;
-    /* Red background color */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
     -fx-font-family: "Roboto";
-    -fx-text-fill: #ffffff;
-    /* White text color */
-    -fx-padding: 10;
-    /* Add padding to the label */
+    -fx-text-fill: #ffffff; /* White text color */
+    -fx-padding: 10; /* Add padding to the label */
 }
 
 /* Sample CSS for styled-alert class */
 .styled-alert .label {
-    -fx-background-color: #e74c3c;
-    /* Red background color */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
     -fx-font-family: "Roboto";
     -fx-font-size: 18;
-    -fx-text-fill: #ffffff;
-    /* White text color */
-    -fx-padding: 10;
-    /* Add padding to the label */
+    -fx-text-fill: #ffffff; /* White text color */
+    -fx-padding: 10; /* Add padding to the label */
 }
 
 /* Sample CSS for styled-alert class */
 .styled-alert .context-menu {
-    -fx-background-color: #e74c3c;
-    /* Red background color */
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
     -fx-font-family: "Roboto";
     -fx-font-size: 18;
-    -fx-text-fill: #ffffff;
-    /* White text color */
-    -fx-padding: 10;
-    /* Add padding to the label */
+    -fx-text-fill: #ffffff; /* White text color */
+    -fx-padding: 10; /* Add padding to the label */
+}
+
+.separator {
+    -fx-background-color: linear-gradient(to left, #517395, #7d7f8d); /* Make the background transparent */
+    -fx-pref-height: 2;
+    -fx-border-color: null;
+}
+
+#verticalSeparator{
+    -fx-background-color: linear-gradient(to bottom, #517395, #7d7f8d); /* Make the background transparent */
+    -fx-pref-width: 2;
+    -fx-border-color: null;
+}
+
+.line {
+    -fx-border-width: 0px;
+    -fx-border-insets: 0px;
+}
+
+#menuBarVbox {
+    -fx-background-color: linear-gradient(to top, #3c3e44, #2c3e50);
+}
+
+#hbxStatus {
+
 }

@@ -31,6 +31,25 @@ public abstract class StringFormatter {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
+    /**
+     * Formats a duration in milliseconds into a string representation of hours, minutes,
+     * and seconds.
+     * <p>
+     * The method takes a duration in milliseconds, converts it into hours, minutes, and seconds,
+     * and then formats it into a string in the "HH:mm:ss" format.
+     *
+     * @param millis The duration in milliseconds to be formatted.
+     * @return A formatted string in the "HH:mm:ss" format.
+     */
+    public static String formatDuration(double millis) {
+
+        return String.format("%02d:%02d:%02d",
+                (int) (millis / 3600000),
+                (int) (millis / 60000) % 60,
+                (int) (millis / 1000) % 60);
+    }
+
+
     public static String formatFileName(String fileName) {
         return fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf(".")) : fileName;
     }

@@ -6,8 +6,10 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:id="vBoxPlayBackBar" minWidth="676.0" prefWidth="1000.0"
-      xmlns="http://javafx.com/javafx/21" fx:controller="com.ch.tusk.controllers.PlaybackController">
+<VBox fx:id="vBoxPlayBackBar" minWidth="676.0" prefWidth="1000.0"
+      style="-fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50);"
+      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.ch.tusk.controllers.PlaybackController">
     <children>
         <Separator maxWidth="1.7976931348623157E308" prefWidth="200.0" VBox.vgrow="NEVER"/>
         <HBox alignment="CENTER" maxHeight="45.0" maxWidth="1.7976931348623157E308" spacing="10.0" VBox.vgrow="NEVER">
@@ -51,8 +53,8 @@
                                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
                                     </HBox.margin>
                                 </ImageView>
-                                <Separator maxHeight="1.7976931348623157E308" minHeight="98.0" orientation="VERTICAL"
-                                           HBox.hgrow="ALWAYS"/>
+                                <Separator id="verticalSeparator" maxHeight="1.7976931348623157E308" minHeight="98.0"
+                                           orientation="VERTICAL" HBox.hgrow="ALWAYS"/>
                                 <VBox prefWidth="901.0" HBox.hgrow="ALWAYS">
                                     <children>
                                         <HBox VBox.vgrow="ALWAYS">
@@ -75,63 +77,63 @@
                                                       maxWidth="1.7976931348623157E308" prefHeight="50.0"
                                                       prefWidth="547.0" spacing="10.0" HBox.hgrow="NEVER">
                                                     <children>
-                                                        <Label fx:id="lblVolume" alignment="CENTER"
+                                                        <Button fx:id="lblVolume" alignment="CENTER"
                                                                contentDisplay="CENTER" maxWidth="1.7976931348623157E308"
                                                                minHeight="30.0" minWidth="30.0">
                                                             <cursor>
                                                                 <Cursor fx:constant="HAND"/>
                                                             </cursor>
-                                                        </Label>
+                                                        </Button>
                                                         <Slider fx:id="volumeBar" prefHeight="14.0" value="100.0"
                                                                 HBox.hgrow="ALWAYS">
                                                             <cursor>
                                                                 <Cursor fx:constant="W_RESIZE"/>
                                                             </cursor>
                                                         </Slider>
-                                                        <Label fx:id="lblReset" maxWidth="1.7976931348623157E308"
+                                                        <Button fx:id="lblReset" maxWidth="1.7976931348623157E308"
                                                                minHeight="30.0" minWidth="30.0" mnemonicParsing="false">
                                                             <cursor>
                                                                 <Cursor fx:constant="HAND"/>
                                                             </cursor>
-                                                        </Label>
-                                                        <Label fx:id="lblRewind" maxWidth="1.7976931348623157E308"
+                                                        </Button>
+                                                        <Button fx:id="lblRewind" maxWidth="1.7976931348623157E308"
                                                                minHeight="30.0" minWidth="30.0" mnemonicParsing="false">
                                                             <cursor>
                                                                 <Cursor fx:constant="HAND"/>
                                                             </cursor>
-                                                        </Label>
-                                                        <Label fx:id="lblPreviousSong" maxWidth="1.7976931348623157E308"
+                                                        </Button>
+                                                        <Button fx:id="lblPreviousSong" maxWidth="1.7976931348623157E308"
                                                                minHeight="30.0" minWidth="30.0" mnemonicParsing="false">
                                                             <cursor>
                                                                 <Cursor fx:constant="HAND"/>
                                                             </cursor>
-                                                        </Label>
-                                                        <Label fx:id="lblPlay" maxWidth="1.7976931348623157E308"
+                                                        </Button>
+                                                        <Button fx:id="lblPlay" maxWidth="1.7976931348623157E308"
                                                                minHeight="40.0" minWidth="40.0" mnemonicParsing="false">
                                                             <cursor>
                                                                 <Cursor fx:constant="HAND"/>
                                                             </cursor>
-                                                        </Label>
-                                                        <Label fx:id="lblNextSong" maxWidth="1.7976931348623157E308"
+                                                        </Button>
+                                                        <Button fx:id="lblNextSong" maxWidth="1.7976931348623157E308"
                                                                minHeight="30.0" minWidth="30.0" mnemonicParsing="false">
                                                             <cursor>
                                                                 <Cursor fx:constant="HAND"/>
                                                             </cursor>
-                                                        </Label>
-                                                        <Label fx:id="lblForward" maxWidth="1.7976931348623157E308"
+                                                        </Button>
+                                                        <Button fx:id="lblForward" maxWidth="1.7976931348623157E308"
                                                                minHeight="30.0" minWidth="30.0" mnemonicParsing="false">
                                                             <cursor>
                                                                 <Cursor fx:constant="HAND"/>
                                                             </cursor>
-                                                        </Label>
-                                                        <Label fx:id="lblShuffle" maxWidth="1.7976931348623157E308"
+                                                        </Button>
+                                                        <Button fx:id="lblShuffle" maxWidth="1.7976931348623157E308"
                                                                minHeight="30.0" minWidth="30.0">
                                                             <cursor>
                                                                 <Cursor fx:constant="HAND"/>
                                                             </cursor>
-                                                        </Label>
+                                                        </Button>
                                                         <ChoiceBox fx:id="speedPicker" maxWidth="1.7976931348623157E308"
-                                                                   minWidth="60.0" HBox.hgrow="ALWAYS">
+                                                                   minWidth="65.0" HBox.hgrow="ALWAYS">
                                                             <cursor>
                                                                 <Cursor fx:constant="HAND"/>
                                                             </cursor>
@@ -184,6 +186,7 @@
                 </VBox>
             </children>
         </VBox>
+        <Separator prefWidth="200.0"/>
         <HBox fx:id="hbxStatus" maxWidth="1.7976931348623157E308" prefWidth="1000.0" VBox.vgrow="NEVER">
             <children>
                 <Label fx:id="lblStatus" alignment="CENTER_RIGHT" contentDisplay="CENTER"

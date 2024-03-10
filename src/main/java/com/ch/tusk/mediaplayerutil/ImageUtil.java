@@ -13,8 +13,24 @@ import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 
+/**
+ * This class provides utility methods for image processing.
+ */
 public class ImageUtil {
 
+    /**
+     * This method is used to create a thumbnail of an original image.
+     * <p>
+     * It calculates the scaling factors for width and height based on the target scaling.
+     * The minimum scaling factor is used to maintain the aspect ratio of the original image.
+     * A new WritableImage with the desired dimensions is created.
+     * The PixelReader and PixelWriter for the original and thumbnail images are obtained.
+     * The image is scaled by reading and writing pixel data.
+     *
+     * @param originalImage The original Image object that needs to be scaled.
+     * @param targetScaling The target scaling for the thumbnail.
+     * @return Image The thumbnail Image object.
+     */
     public static Image createThumbnail(Image originalImage, int targetScaling) {
 
         // Calculate the scaling factors for width and height

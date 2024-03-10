@@ -5,7 +5,7 @@
 package com.ch.tusk.json;
 
 import com.ch.tusk.controllers.LoadingScreenController;
-import com.ch.tusk.customnodes.AlbumCoverImageView;
+import com.ch.tusk.customnodes.IconImageView;
 import com.ch.tusk.mediaListPlayer.MediaListPlayer;
 import com.ch.tusk.mediametadata.NumericFilenameComparator;
 import com.ch.tusk.mediaplayerutil.ImageUtil;
@@ -30,8 +30,6 @@ import uk.co.caprica.vlcj.medialist.MediaList;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -50,23 +48,25 @@ public class Json {
     public Json() {
     }
 
-    public boolean loadStatusJSON(String filePath) {
-
-        try (Reader reader = new FileReader(filePath)) {
-
-            // Deserialize the JSON from the file into ArrayList<Album>
-            Status status = GSON_STATUS.fromJson(reader, Status.class);
-            return
-//                    status != null &&
-                    status.isFirstTime();
-        } catch (Exception ignored) {
-        }
-        return true;
+    public boolean isFirstRuntime(String filePath) {
+        return loadStatusJson(filePath).isFirstTime();
     }
 
-    public void extractJSON(MediaListPlayer mediaListPlayer, TreeView<String> mediaTreeView, LoadingScreenController loaderLoadingScreen) throws IOException {
+    public Status loadStatusJson(String filePath) {
 
-        boolean loadStatusJSON = loadStatusJSON(Constants.STATUS_JSON_LOCATION);
+        try (Reader reader = new FileReader(filePath)) {
+            // Deserialize the JSON from the file into ArrayList<Album>
+            return GSON_STATUS.fromJson(reader, Status.class);
+        } catch (Exception ignored) {
+            return null;
+        }
+
+    }
+
+    public void
+    extractJSON(MediaListPlayer mediaListPlayer, TreeView<String> mediaTreeView, LoadingScreenController loaderLoadingScreen) throws IOException {
+
+        boolean loadStatusJSON = isFirstRuntime(Constants.STATUS_JSON_LOCATION);
 
         if (loadStatusJSON) {
             Platform.runLater(() -> loaderLoadingScreen.setLblProgress("Performing initial setup. This may take a while."));
@@ -74,7 +74,9 @@ public class Json {
             try {
                 writeAlbumArrayToJSON(createAlbumArray(mediaListPlayer,
                         obtainMusicDirectories(
-                                Constants.DEFAULT_MUSIC_FOLDER)
+                                Constants.DEFAULT_MUSIC_FOLDER
+//                        loadStatusJson(Constants.STATUS_JSON_LOCATION).musicFolders()
+                        )
                 ), Constants.ALBUM_JSON_LOCATION);
 
                 writeStatusJSON(Constants.STATUS_JSON_LOCATION, false);
@@ -91,12 +93,21 @@ public class Json {
 
     public void writeStatusJSON(String jsonPath, boolean value) {
         try (Writer writer = new FileWriter(jsonPath)) {
-            Status status = new Status(value);
+            Status status = new Status(value, new HashSet<>());
             GSON_STATUS.toJson(status, Status.class, writer);
         } catch (IOException ex) {
             System.out.println(ex);
         }
     }
+
+    public void writeStatusJSON(String jsonPath, Status status) {
+        try (Writer writer = new FileWriter(jsonPath)) {
+            GSON_STATUS.toJson(status, Status.class, writer);
+        } catch (IOException ex) {
+            System.out.println(ex);
+        }
+    }
+
 
     /**
      * Receives an array of Albums and writes it to a JSON file.
@@ -146,40 +157,61 @@ public class Json {
         // The folderPath must not be null
         if (folderPath != null) {
 
-            File rootFolder = new File(folderPath);
+            return processMusicFolder(folderPath);
 
-            if (rootFolder.isDirectory()) {
-                ArrayList<File> allFolders = new ArrayList<>();
-                Queue<File> folderQueue = new ArrayDeque<>();
-                folderQueue.add(rootFolder);
+        }
+        return null;
+    }
 
-                // Process folders using a while loop
-                while (!folderQueue.isEmpty()) {
-                    File currentFolder = folderQueue.poll();
+    public ArrayList<String> obtainMusicDirectories(Set<String> folderPaths) {
 
-                    // Check if the folder contains playable files
-                    String[] audioFiles = currentFolder.list(Constants.AUDIO_NAME_FILTER);
-                    if (audioFiles != null && audioFiles.length > 0) {
-                        // if so add them to the array
-                        allFolders.add(currentFolder);
-                    }
+        // The folderPath must not be null
+        if (!folderPaths.isEmpty()) {
 
-                    // Get all subfolders and add them to the queue
-                    File[] subfolders = currentFolder.listFiles(File::isDirectory);
-                    if (subfolders != null) {
-                        folderQueue.addAll(Arrays.asList(subfolders));
-                    }
+            var allMusicFolders = new ArrayList<String>();
+
+            folderPaths.forEach(folder -> {
+                allMusicFolders.addAll(processMusicFolder(folder));
+            });
+
+            return allMusicFolders;
+
+        }
+        return null;
+    }
+
+    private ArrayList<String> processMusicFolder(String folder) {
+
+        File rootFolder = new File(folder);
+
+        if (rootFolder.isDirectory()) {
+            ArrayList<File> allFolders = new ArrayList<>();
+            Queue<File> folderQueue = new ArrayDeque<>();
+            folderQueue.add(rootFolder);
+
+            // Process folders using a while loop
+            while (!folderQueue.isEmpty()) {
+                File currentFolder = folderQueue.poll();
+
+                // Check if the folder contains playable files
+                String[] audioFiles = currentFolder.list(Constants.AUDIO_NAME_FILTER);
+                if (audioFiles != null && audioFiles.length > 0) {
+                    // if so add them to the array
+                    allFolders.add(currentFolder);
                 }
 
-                ArrayList<String> directories = new ArrayList<>();
-
-                for (File folder : allFolders) {
-                    directories.add(folder.getPath());
+                // Get all subfolders and add them to the queue
+                File[] subfolders = currentFolder.listFiles(File::isDirectory);
+                if (subfolders != null) {
+                    folderQueue.addAll(Arrays.asList(subfolders));
                 }
-
-                return directories;
-
             }
+
+            ArrayList<String> directories = new ArrayList<>();
+
+            allFolders.forEach(file -> directories.add(file.getPath()));
+
+            return directories;
 
         }
         return null;
@@ -243,9 +275,7 @@ public class Json {
         // Array to be written
         ArrayList<Album> albumArray = new ArrayList<>();
 
-        for (Map.Entry<String, List<String>> entry : sortedAlbums) {
-            populateAlbum(entry, albumArray, albumAndUrl);
-        }
+        sortedAlbums.forEach(album -> populateAlbum(album, albumArray, albumAndUrl));
 
         return albumArray;
     }
@@ -260,15 +290,15 @@ public class Json {
     private void populateAlbum(Map.Entry<String, List<String>> entry, ArrayList<Album> albumArray,
                                Map<String, String> albumAndUrl) {
 
-        String album = entry.getKey();
-        List<String> songs = entry.getValue();
+        String albumName = entry.getKey();
+        List<String> songsList = entry.getValue();
 
-        if (songs.size() >= 100) {
-            songs.sort(new NumericFilenameComparator());
+        if (songsList.size() >= 100) {
+            songsList.sort(new NumericFilenameComparator());
         }
 
         // Create a new Album record using the automatically generated constructor
-        Album albumObject = new Album(album, songs, albumAndUrl.get(album));
+        Album albumObject = new Album(albumName, songsList, albumAndUrl.get(albumName));
 
         albumArray.add(albumObject);
     }
@@ -276,20 +306,20 @@ public class Json {
     /**
      * Populates a media list with each audio file within each directory in the
      * array of directories.
+     * TODO: is the Path conversion really necessary?
      *
      * @param directories the array of directores that contain audio files
      * @param mediaList   the mediaList that songs are added to
      */
     private void populateMediaList(ArrayList<String> directories, MediaList mediaList) {
-        for (String directory : directories) {
-            Path get = Paths.get(directory);
-            String[] list = get.toFile().list(Constants.AUDIO_NAME_FILTER);
-            if (list != null) {
-                for (String file : list) {
-                    mediaList.media().add(directory + File.separatorChar + file);
-                }
+
+        directories.forEach(directory -> {
+            String[] songList = new File(directory).list(Constants.AUDIO_NAME_FILTER);
+            if (songList != null) {
+                Arrays.stream(songList).forEach(file -> mediaList.media().add(directory + File.separatorChar + file));
             }
-        }
+        });
+
     }
 
     /**
@@ -298,14 +328,14 @@ public class Json {
      * MediaEventListener is removed for cleanup reasons. Each media object
      * created here will be released in the populateAlbumMaps() method
      *
-     * @param list   the mediaList containing each media file
-     * @param indexl the index of the media to be parsed and returned
+     * @param list  the mediaList containing each media file
+     * @param index the index of the media to be parsed and returned
      * @return a parsed Media object
      * @throws Exception for any exception that could arise from the parsing
      */
-    private Media getParsedMedia(MediaList list, int indexl) throws Exception {
+    private Media getParsedMedia(MediaList list, int index) throws Exception {
 
-        final Media media = list.media().newMedia(indexl);
+        final Media media = list.media().newMedia(index);
         final CountDownLatch latch = new CountDownLatch(1);
 
         MediaEventListener listener = new MediaEventAdapter() {
@@ -347,12 +377,14 @@ public class Json {
     private void populateAlbumMaps(MediaList mediaList, HashMap<String, List<String>> albumMap, Map<String, String> albumAndUrl) {
 
         List<String> mrls = mediaList.media().mrls();
+
         for (int i = 0; i < mrls.size(); i++) {
 
             try {
                 Media media = getParsedMedia(mediaList, i);
+                // THIS MAY BE CAUSING THE ISSUE
                 MetaApi meta = Objects.requireNonNull(media).meta();
-                String album = meta.get(Meta.ALBUM);
+                String album = meta.get(Meta.ALBUM) == null ? "UNKNOWN" : meta.get(Meta.ALBUM);
                 String song = mrls.get(i);
 
                 //Add the song to the album's list in the map
@@ -365,7 +397,8 @@ public class Json {
                 }).add(song); // regardless of whether the key was present in the map or not, the song is added to the List<String> associated with the album.
 
                 media.release();
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         }
@@ -401,15 +434,6 @@ public class Json {
     public void loadAlbumArray(String filePath, TreeView<String> mediaTreeView, Label lblStatus) {
 
         ArrayList<Album> albumArray = loadAlbumArrayFromJson(filePath);
-//        // Send album map to MainSceneController
-//
-//        HashMap<String, String> albumCoverMap = new HashMap<>();
-//
-//        for (Album album : albumArray) {
-//            albumCoverMap.put(album.getAlbumName(), album.getImageURL());
-//        }
-//
-//        MainSceneController.albumCoverMap = albumCoverMap;
 
         if (albumArray != null) {
 
@@ -445,15 +469,13 @@ public class Json {
 
         }
 
-        // Iterate through the songs in the current album
-        for (String song : album.songs()) {
-            treeItem.getChildren().add(new TreeItem<>(StringFormatter.getFileNameFromMrl(song)));
-        }
+        // Add each song from the album to the TreeItem
+        album.songs().forEach(song -> treeItem.getChildren().add(new TreeItem<>(StringFormatter.getFileNameFromMrl(song))));
 
     }
 
     private void setTreeItemGraphic(TreeItem<String> treeItem, Album album, int i) throws IOException {
-        AlbumCoverImageView albumCoverMediaView = new AlbumCoverImageView();
+        IconImageView albumCoverMediaView = new IconImageView(60, 60);
         String thumbnailPath = Constants.THUMBNAIL_LOCATION + "/" + i + ".png";
         File thumbnail = new File(thumbnailPath);
         if (!thumbnail.exists()) {

@@ -14,26 +14,37 @@ import java.util.List;
 
 public class AlbumTypeAdapter extends TypeAdapter<Album> {
 
+    /**
+     * This method is used to write the JSON representation of an Album object.
+     *
+     * @param out   The JsonWriter object used to write the JSON output.
+     * @param album The Album object that needs to be converted to JSON.
+     * @throws IOException If an I/O error occurs.
+     */
     @Override
     public void write(JsonWriter out, Album album) throws IOException {
-        out.beginObject();
-        out.name("albumName").value(album.albumName());
-        out.name("songs").beginArray();
-        for (String song : album.songs()) {
-            out.value(song);
+        out.beginObject();  // Start the JSON object.
+        out.name("albumName").value(album.albumName());  // Write the album name.
+        out.name("songs").beginArray();  // Start the songs array.
+        for (String song : album.songs()) {  // Iterate over each song in the album.
+            out.value(song);  // Write the song to the JSON output.
         }
-        out.endArray();
-        out.name("imageURL").value(album.imageURL());
-        out.endObject();
+        out.endArray();  // End the songs array.
+        out.name("imageURL").value(album.imageURL());  // Write the album image URL.
+        out.endObject();  // End the JSON object.
     }
 
+    /**
+     * This method is used to read the JSON representation of an Album object.
+     *
+     * @param in The JsonReader object used to read the JSON input.
+     * @return Album The Album object that is created from the JSON input.
+     * @throws IOException If an I/O error occurs.
+     */
     @Override
     public Album read(JsonReader in) throws IOException {
-
-
         String albumName = "", coverUrl = "";
         List<String> songsArray = null;
-
 
         in.beginObject();
         while (in.hasNext()) {
@@ -53,6 +64,13 @@ public class AlbumTypeAdapter extends TypeAdapter<Album> {
                 coverUrl);
     }
 
+    /**
+     * This method is used to read an array of songs from the JSON input.
+     *
+     * @param in The JsonReader object used to read the JSON input.
+     * @return List<String> The list of songs that is created from the JSON input.
+     * @throws IOException If an I/O error occurs.
+     */
     private List<String> readSongsArray(JsonReader in) throws IOException {
         List<String> songs = new ArrayList<>();
         in.beginArray();

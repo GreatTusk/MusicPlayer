@@ -1,13 +1,13 @@
 package com.ch.tusk.controllers;
 
+import com.ch.tusk.customnodes.IconImageView;
 import com.ch.tusk.json.Constants;
+import com.ch.tusk.mediaplayerutil.StringFormatter;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -17,10 +17,6 @@ import java.net.URL;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 
 /**
  * @author f_776
@@ -28,21 +24,17 @@ import java.util.ResourceBundle;
 public class PlaybackController implements Initializable {
 
     private final int[] speedList = {25, 50, 75, 100, 125, 150, 175, 200};
-    //    @FXML
-//    private HBox hbxStatus;
-//    @FXML
-//    private VBox vBoxPlayBackBar;
-//    @FXML
-//    private Button btnSearchSong;
+
     @FXML
     private ChoiceBox<String> speedPicker;
     @FXML
     private Slider volumeBar;
     @FXML
+    private Button lblPlay, lblNextSong, lblPreviousSong, lblReset, lblForward, lblRewind, lblShuffle, lblVolume;
+    @FXML
     private ImageView coverArt;
     @FXML
-    private Label lblSongName, lblCurrentTime, lblDuration, lblSongAlbum, lblSongArtist, lblVolume, lblStatus,
-            lblPlay, lblNextSong, lblPreviousSong, lblReset, lblForward, lblRewind, lblShuffle;
+    private Label lblSongName, lblCurrentTime, lblDuration, lblSongAlbum, lblSongArtist, lblStatus;
     @FXML
     private ProgressBar pbgSong;
     private int volume;
@@ -61,46 +53,64 @@ public class PlaybackController implements Initializable {
         setUpEventListeners();
     }
 
+    /**
+     * This method sets up the event listeners for the volume bar, speed control, and action labels.
+     * <p>
+     * 1. The volume bar's value property is observed and whenever it changes, the volume of the media player is adjusted accordingly.
+     * 2. The speed control is initialized.
+     * 3. The action listeners for the labels are set.
+     */
     private void setUpEventListeners() {
+        // Add a listener to the volume bar's value property.
+        // When the value changes, the volume of the media player is set to the new value.
         volumeBar.valueProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) ->
                 Constants.MEDIA_LIST_PLAYER.setVolume((int) (volumeBar.getValue())));
+
+        // Initialize the speed control.
         initializeSpeedControl();
+
+        // Set the action listeners for the labels.
         setLabelsActionListeners();
     }
 
 
     private void setButtonIcons() {
         String path = "/images/";
-        Label[] labels = new Label[]{lblPlay, lblNextSong, lblPreviousSong, lblReset, lblVolume, lblRewind, lblForward, lblShuffle};
+        Button[] buttons = new Button[]{lblPlay, lblNextSong, lblPreviousSong, lblReset, lblVolume, lblRewind, lblForward, lblShuffle};
 
-        for (int i = 1; i <= labels.length; i++) {
-            ImageView imageView = new ImageView(new Image(Objects.requireNonNull(getClass().getResourceAsStream(path + i + ".png"))));
-            imageView.setFitWidth(labels[i - 1].getMinWidth());
-            imageView.setFitHeight(labels[i - 1].getMinHeight());
-            // Set preserveRatio to true
-            imageView.setPreserveRatio(true);
+        for (int i = 1; i <= buttons.length; i++) {
 
-            // Set smooth to true for image smoothing
-            imageView.setSmooth(true);
-            labels[i - 1].setGraphic(imageView);
+            var imageView = new IconImageView(buttons[i - 1].getMinHeight(), buttons[i - 1].getMinWidth());
+            imageView.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream(path + i + ".png"))));
+            buttons[i - 1].setGraphic(imageView);
 
         }
     }
 
     public void setLblPlayIcon(InputStream image) {
-        ImageView imageView = new ImageView(new Image(image));
-        imageView.setFitWidth(this.lblPlay.getMinWidth());
-        imageView.setFitHeight(this.lblPlay.getMinHeight());
-        // Set preserveRatio to true
-        imageView.setPreserveRatio(true);
-
-        // Set smooth to true for image smoothing
-        imageView.setSmooth(true);
-        this.lblPlay.setGraphic(imageView);
+        var imageView = (ImageView) this.lblPlay.getGraphic();
+        imageView.setImage(new Image(image));
     }
 
     private void setLabelsActionListeners() {
-        lblPlay.setOnMousePressed(event -> {
+
+        lblNextSong.setOnAction(event -> nextSong());
+        lblPreviousSong.setOnAction(event -> previousSong());
+        lblReset.setOnAction(event -> resetMedia());
+        lblForward.setOnAction(event -> forward());
+        lblRewind.setOnAction(event -> rewind());
+        lblShuffle.setOnAction(event -> Constants.MEDIA_LIST_PLAYER.shuffle());
+        lblVolume.setOnAction(event -> {
+            Platform.runLater(() -> {
+                if (!Constants.MEDIA_LIST_PLAYER.isMuted()) {
+                    volume = Constants.MEDIA_LIST_PLAYER.getVolume();
+                } else {
+                    volumeBar.setValue(volume);
+                }
+                Constants.MEDIA_LIST_PLAYER.mute();
+            });
+        });
+        lblPlay.setOnAction(event -> {
             if (Constants.MEDIA_LIST_PLAYER.isPlaying()) {
                 Constants.MEDIA_LIST_PLAYER.pauseMedia();
             } else {
@@ -108,23 +118,7 @@ public class PlaybackController implements Initializable {
             }
 
         });
-        lblNextSong.setOnMousePressed(event -> nextSong());
-        lblPreviousSong.setOnMousePressed(event -> previousSong());
-        lblReset.setOnMousePressed(event -> resetMedia());
-        lblVolume.setOnMousePressed(event -> {
-            if (!Constants.MEDIA_LIST_PLAYER.isMuted()) {
-                volume = Constants.MEDIA_LIST_PLAYER.getVolume();
-                volumeBar.setValue(0);
-            } else {
-                volumeBar.setValue(volume);
-            }
-            Constants.MEDIA_LIST_PLAYER.mute();
 
-        });
-        lblForward.setOnMousePressed(event -> forward());
-        lblRewind.setOnMousePressed(event -> rewind());
-
-        lblShuffle.setOnMousePressed(event -> Constants.MEDIA_LIST_PLAYER.shuffle());
 
     }
 
@@ -135,7 +129,7 @@ public class PlaybackController implements Initializable {
 
     public void forward() {
         Constants.MEDIA_LIST_PLAYER.skip(10000);
-        setLblStatus("Ordered by albums.");
+        setLblStatus("Forwarded by 10 seconds.");
     }
 
     // On Mouse clicked
@@ -157,6 +151,9 @@ public class PlaybackController implements Initializable {
     // On mouse dragged
     public void dragProgressBar(MouseEvent e) {
         double progress = getProgressBarProgress(e);
+        double songDuration = Constants.MEDIA_LIST_PLAYER.getCurrentSongDuration();
+        double millisToSeek = progress * songDuration;
+        setLblCurrentTime(StringFormatter.formatDuration(millisToSeek));
         updateProgressBar(progress);
     }
 
@@ -180,6 +177,7 @@ public class PlaybackController implements Initializable {
     }
 
     private void initializeSpeedControl() {
+
         for (int j : speedList) {
             speedPicker.getItems().add(j + "%");
         }
@@ -246,8 +244,9 @@ public class PlaybackController implements Initializable {
         this.coverArt.setImage(coverArt);
     }
 
-    public void setLblVolumeImage(ImageView lblVolume) {
-        this.lblVolume.setGraphic(lblVolume);
+    public void setLblVolumeImage(Image image) {
+        var imageView = (ImageView) this.lblVolume.getGraphic();
+        imageView.setImage(image);
     }
 
     public Label getLblStatus() {
