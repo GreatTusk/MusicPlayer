@@ -5,6 +5,7 @@ import com.ch.tusk.json.Constants;
 import com.ch.tusk.json.Json;
 import com.ch.tusk.mediaListPlayer.MediaListPlayer;
 import com.ch.tusk.mediametadata.ResourceExtractor;
+import com.sun.jna.NativeLibrary;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -16,6 +17,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
+import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
 
 import java.io.File;
 import java.io.IOException;
@@ -85,9 +87,25 @@ public class MusicPlayerFX extends Application {
             } catch (IOException ignored) {
             }
         }
-        // The following commented lines are used to add the VLCJ plugins to the native library search path and discover the native libraries.
-        // NativeLibrary.addSearchPath("libvlc", System.getProperty("user.home") + File.separator + "MusicPlayerFX" + File.separator + "vlcjPlugins");
-        // new NativeDiscovery().discover();
+//         The following commented lines are used to add the VLCJ plugins to the native library search path and discover the native libraries.
+
+    }
+
+    /**
+     * This method is used to discover the VLC libraries.
+     * <p>
+     * It adds the VLCJ plugins to the native library search path.
+     * The path is constructed using the user's home directory, the application name, and the VLCJ plugins folder.
+     * The native libraries are then discovered using the NativeDiscovery class.
+     * Finally, a new MediaListPlayer object is created and assigned to the MEDIA_LIST_PLAYER constant.
+     */
+    private static void discoverVlcLibs() {
+        // Add the VLCJ plugins to the native library search path
+        NativeLibrary.addSearchPath("libvlc", System.getProperty("user.home") + File.separator + "MusicPlayerFX" + File.separator + "vlcjPlugins");
+        // Discover the native libraries
+        new NativeDiscovery().discover();
+        // Create a new MediaListPlayer object and assign it to the MEDIA_LIST_PLAYER constant
+        Constants.MEDIA_LIST_PLAYER = new MediaListPlayer();
     }
 
     /**
@@ -160,7 +178,7 @@ public class MusicPlayerFX extends Application {
         // The scene's constructor can also receive a color
         Scene loadingScene = new Scene(loadingRoot);
         //   loadingScene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
-        Constants.MEDIA_LIST_PLAYER = new MediaListPlayer();
+
         Platform.runLater(() -> {
 
             Stage loadingStage = setUpLoadingStage(loadingScene);
@@ -169,8 +187,9 @@ public class MusicPlayerFX extends Application {
                 @Override
                 protected Void call() {
                     loadLibraries();
+                    discoverVlcLibs();
                     try {
-                        new Json().extractJSON(Constants.MEDIA_LIST_PLAYER, Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView(), loaderLoadingScreen.getController());
+                        new Json().extractJSON(Constants.MEDIA_LIST_PLAYER, Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView(), Constants.MAIN_SCENE_CONTROLLER.getTracksListView(), loaderLoadingScreen.getController());
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

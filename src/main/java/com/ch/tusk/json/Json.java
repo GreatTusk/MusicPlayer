@@ -18,9 +18,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
@@ -63,32 +65,45 @@ public class Json {
 
     }
 
-    public void
-    extractJSON(MediaListPlayer mediaListPlayer, TreeView<String> mediaTreeView, LoadingScreenController loaderLoadingScreen) throws IOException {
+    public void extractJSON(MediaListPlayer mediaListPlayer, TreeView<String> mediaTreeView,
+                            ListView<String> mediaListView,
+                            LoadingScreenController loaderLoadingScreen) throws IOException {
 
         boolean loadStatusJSON = isFirstRuntime(Constants.STATUS_JSON_LOCATION);
 
         if (loadStatusJSON) {
             Platform.runLater(() -> loaderLoadingScreen.setLblProgress("Performing initial setup. This may take a while."));
-
+            writeStatusJSON(Constants.STATUS_JSON_LOCATION, false);
             try {
                 writeAlbumArrayToJSON(createAlbumArray(mediaListPlayer,
                         obtainMusicDirectories(
                                 Constants.DEFAULT_MUSIC_FOLDER
-//                        loadStatusJson(Constants.STATUS_JSON_LOCATION).musicFolders()
                         )
                 ), Constants.ALBUM_JSON_LOCATION);
 
-                writeStatusJSON(Constants.STATUS_JSON_LOCATION, false);
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ignored) {
             }
-
         }
         Platform.runLater(() -> loaderLoadingScreen.setLblProgress("Loading albums..."));
-        loadAlbumArray(Constants.ALBUM_JSON_LOCATION, mediaTreeView,
+        loadAlbumArray(Constants.ALBUM_JSON_LOCATION, mediaTreeView, mediaListView,
                 Constants.PLAYBACK_CONTROLLER.getLblStatus());
 
+    }
+
+    public void extractJSON(TreeView<String> mediaTreeView, ListView<String> mediaListView) {
+
+        try {
+            writeAlbumArrayToJSON(createAlbumArray(Constants.MEDIA_LIST_PLAYER,
+                    obtainMusicDirectories(loadStatusJson(Constants.STATUS_JSON_LOCATION).musicFolders())
+            ), Constants.ALBUM_JSON_LOCATION);
+
+        } catch (IOException ignored) {
+        }
+
+        Platform.runLater(() -> {
+            loadAlbumArray(Constants.ALBUM_JSON_LOCATION, mediaTreeView, mediaListView,
+                    Constants.PLAYBACK_CONTROLLER.getLblStatus());
+        });
     }
 
     public void writeStatusJSON(String jsonPath, boolean value) {
@@ -152,95 +167,49 @@ public class Json {
      * @return an ArrayList of directories. null if the path provided is null or
      * if it is not a directory
      */
-    public ArrayList<String> obtainMusicDirectories(String folderPath) {
+    public Set<String> obtainMusicDirectories(String folderPath) {
 
         // The folderPath must not be null
         if (folderPath != null) {
-
             return processMusicFolder(folderPath);
 
         }
         return null;
     }
 
-    public ArrayList<String> obtainMusicDirectories(Set<String> folderPaths) {
-
-        // The folderPath must not be null
-        if (!folderPaths.isEmpty()) {
-
-            var allMusicFolders = new ArrayList<String>();
-
-            folderPaths.forEach(folder -> {
-                allMusicFolders.addAll(processMusicFolder(folder));
-            });
-
-            return allMusicFolders;
-
-        }
-        return null;
+    public Set<String> obtainMusicDirectories(Set<String> folderPaths) {
+        Set<String> allMusicFolders = new HashSet<>();
+        folderPaths.forEach(folder -> allMusicFolders.addAll(Objects.requireNonNull(processMusicFolder(folder))));
+        return allMusicFolders;
     }
 
-    private ArrayList<String> processMusicFolder(String folder) {
-
+    private Set<String> processMusicFolder(String folder) {
         File rootFolder = new File(folder);
+        Set<String> directories = new HashSet<>();
 
         if (rootFolder.isDirectory()) {
-            ArrayList<File> allFolders = new ArrayList<>();
-            Queue<File> folderQueue = new ArrayDeque<>();
-            folderQueue.add(rootFolder);
+            Queue<File> folderQueue = new ArrayDeque<>(Collections.singleton(rootFolder));
 
-            // Process folders using a while loop
             while (!folderQueue.isEmpty()) {
                 File currentFolder = folderQueue.poll();
 
-                // Check if the folder contains playable files
-                String[] audioFiles = currentFolder.list(Constants.AUDIO_NAME_FILTER);
-                if (audioFiles != null && audioFiles.length > 0) {
-                    // if so add them to the array
-                    allFolders.add(currentFolder);
+                if (hasPlayableFile(currentFolder)) {
+                    directories.add(currentFolder.getPath());
                 }
 
-                // Get all subfolders and add them to the queue
                 File[] subfolders = currentFolder.listFiles(File::isDirectory);
-                if (subfolders != null) {
-                    folderQueue.addAll(Arrays.asList(subfolders));
+                if (subfolders != null && subfolders.length != 0) {
+                    Collections.addAll(folderQueue, subfolders);
                 }
             }
-
-            ArrayList<String> directories = new ArrayList<>();
-
-            allFolders.forEach(file -> directories.add(file.getPath()));
-
-            return directories;
-
         }
-        return null;
+
+        return directories;
     }
 
     public boolean hasPlayableFile(File rootFolder) {
-        Queue<File> folderQueue = new ArrayDeque<>();
-        folderQueue.add(rootFolder);
-
-        // Process folders using a while loop
-        while (!folderQueue.isEmpty()) {
-            File currentFolder = folderQueue.poll();
-
-            // Check if the folder contains playable files
-            String[] audioFiles = currentFolder.list(Constants.AUDIO_NAME_FILTER);
-            if (audioFiles != null && audioFiles.length > 0) {
-                // If a playable file is found, return true
-                return true;
-            }
-
-            // Get all subfolders and add them to the queue
-            File[] subfolders = currentFolder.listFiles(File::isDirectory);
-            if (subfolders != null) {
-                folderQueue.addAll(Arrays.asList(subfolders));
-            }
-        }
-
-        // No playable file found in any folder
-        return false;
+        String[] audioFiles = rootFolder.list(Constants.AUDIO_NAME_FILTER);
+        return audioFiles != null && audioFiles.length > 0;
     }
 
     /**
@@ -256,7 +225,7 @@ public class Json {
      * @param directories     array of directories that contain audioFiles
      * @return arrayList of albums
      */
-    public ArrayList<Album> createAlbumArray(MediaListPlayer mediaListPlayer, ArrayList<String> directories) throws IOException {
+    public ArrayList<Album> createAlbumArray(MediaListPlayer mediaListPlayer, Set<String> directories) throws IOException {
 
         MediaList mediaList = mediaListPlayer.getMediaListPlayer().list().newMediaList();
 
@@ -306,12 +275,11 @@ public class Json {
     /**
      * Populates a media list with each audio file within each directory in the
      * array of directories.
-     * TODO: is the Path conversion really necessary?
      *
      * @param directories the array of directores that contain audio files
      * @param mediaList   the mediaList that songs are added to
      */
-    private void populateMediaList(ArrayList<String> directories, MediaList mediaList) {
+    private void populateMediaList(Set<String> directories, MediaList mediaList) {
 
         directories.forEach(directory -> {
             String[] songList = new File(directory).list(Constants.AUDIO_NAME_FILTER);
@@ -431,17 +399,20 @@ public class Json {
      * @param mediaTreeView treeView to be populated
      * @param lblStatus     the statusLbl from playbackController
      */
-    public void loadAlbumArray(String filePath, TreeView<String> mediaTreeView, Label lblStatus) {
+    public void loadAlbumArray(String filePath, TreeView<String> mediaTreeView, ListView<String> mediaListView, Label lblStatus) {
 
         ArrayList<Album> albumArray = loadAlbumArrayFromJson(filePath);
 
         if (albumArray != null) {
 
             createThumbnailFolder();
+            ObservableList<String> songs = FXCollections.observableArrayList();
 
             for (int i = 0; i < albumArray.size(); i++) {
-                populateMediaTreeView(albumArray.get(i), mediaTreeView.getRoot().getChildren(), i);
+                populateMediaTreeView(albumArray.get(i), mediaTreeView.getRoot().getChildren(), i, songs);
             }
+
+            mediaListView.setItems(songs);
 
             Platform.runLater(() -> lblStatus.setText("Loaded " + albumArray.size() + " albums!"));
 
@@ -457,40 +428,74 @@ public class Json {
      * @param album    the album object containing its info
      * @param children the children of the mediaTreeView's root
      */
-    private void populateMediaTreeView(Album album, ObservableList<TreeItem<String>> children, int i) {
+    private void populateMediaTreeView(Album album, ObservableList<TreeItem<String>> children, int albumIndex,
+                                       ObservableList<String> songsList) {
 
         TreeItem<String> treeItem = new TreeItem<>(album.albumName());
 
         children.add(treeItem);
 
         try {
-            setTreeItemGraphic(treeItem, album, i);
+            setTreeItemGraphic(treeItem, album, albumIndex);
         } catch (Exception ignored) {
 
         }
 
-        // Add each song from the album to the TreeItem
-        album.songs().forEach(song -> treeItem.getChildren().add(new TreeItem<>(StringFormatter.getFileNameFromMrl(song))));
+        // Add each song from the album to the TreeItem as a child
+        album.songs().forEach(song -> {
+            songsList.add(StringFormatter.getFileNameFromMrl(song));
+            treeItem.getChildren().add(new TreeItem<>(StringFormatter.getFileNameFromMrl(song)));
+        });
 
     }
 
-    private void setTreeItemGraphic(TreeItem<String> treeItem, Album album, int i) throws IOException {
-        IconImageView albumCoverMediaView = new IconImageView(60, 60);
-        String thumbnailPath = Constants.THUMBNAIL_LOCATION + "/" + i + ".png";
+    /**
+     * This method is used to set the graphic for a TreeItem representing an album.
+     * <p>
+     * It first constructs the path to the thumbnail image for the album using the album's index.
+     * If the thumbnail image does not exist, it is created using the saveThumbnail method.
+     * An IconImageView object is then created and the thumbnail image is set as its image.
+     * Finally, the IconImageView object is set as the graphic for the TreeItem.
+     *
+     * @param treeItem   The TreeItem for which the graphic is to be set.
+     * @param album      The Album object representing the album.
+     * @param albumIndex The index of the album.
+     * @throws IOException If an error occurs when creating the thumbnail image.
+     */
+    private void setTreeItemGraphic(TreeItem<String> treeItem, Album album, int albumIndex) throws IOException {
+
+        // Construct the path to the thumbnail image
+        String thumbnailPath = Constants.THUMBNAIL_LOCATION + "/" + albumIndex + ".png";
         File thumbnail = new File(thumbnailPath);
+
+        // If the thumbnail image does not exist, create it
         if (!thumbnail.exists()) {
-            saveThumbnail(album.imageURL(), i);
+            saveThumbnail(album.imageURL(), albumIndex);
         }
 
+        // Create an IconImageView object and set the thumbnail image as its image
+        IconImageView albumCoverMediaView = new IconImageView(60, 60);
         albumCoverMediaView.setImage(new Image(thumbnail.toURI().toURL().toString()));
 
+        // Set the IconImageView object as the graphic for the TreeItem
         treeItem.setGraphic(albumCoverMediaView);
     }
 
-    private void saveThumbnail(String imageURL, int i) {
+    /**
+     * This method is used to save a thumbnail image for an album.
+     * <p>
+     * It creates a scaled thumbnail of the album cover using the ImageUtil.createThumbnail method.
+     * The thumbnail is saved as a PNG file in the directory specified by Constants.THUMBNAIL_LOCATION.
+     * The filename of the thumbnail is the index of the album.
+     *
+     * @param imageURL   The URL of the album cover image.
+     * @param albumIndex The index of the album.
+     * @throws RuntimeException If an IOException occurs when writing the image file.
+     */
+    private void saveThumbnail(String imageURL, int albumIndex) {
 
         // Create a scaled thumbnail using the ImageUtil.createThumbnail method
-        File thumbnail = new File(Constants.THUMBNAIL_LOCATION + "/" + i + ".png");
+        File thumbnail = new File(Constants.THUMBNAIL_LOCATION + "/" + albumIndex + ".png");
 
         // Convert the Image to a BufferedImage
         BufferedImage bufferedImage = SwingFXUtils.fromFXImage(ImageUtil.createThumbnail(getAlbumCoverImage(imageURL), 70), null);
@@ -504,10 +509,20 @@ public class Json {
 
     }
 
+    /**
+     * This method is used to create a directory for storing thumbnail images.
+     * <p>
+     * It first creates a File object representing the directory specified by Constants.THUMBNAIL_LOCATION.
+     * If the directory does not exist, it is created using the mkdir method of the File class.
+     */
     private void createThumbnailFolder() {
 
+        // Create a File object representing the directory
         File thumbnailFolder = new File(Constants.THUMBNAIL_LOCATION);
+
+        // Check if the directory exists
         if (!thumbnailFolder.exists()) {
+            // If the directory does not exist, create it
             thumbnailFolder.mkdir();
         }
 

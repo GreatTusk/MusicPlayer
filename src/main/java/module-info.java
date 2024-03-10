@@ -11,6 +11,7 @@ module com.ch.tusk {
     requires com.sun.jna.platform;
     requires javafx.swing;
 
+
     opens com.ch.tusk.controllers to javafx.fxml;
     exports com.ch.tusk.model;
     exports com.ch.tusk.main;

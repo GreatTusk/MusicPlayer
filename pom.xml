@@ -83,6 +83,25 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <groupId>io.github.fvarrui</groupId>
+                <artifactId>javapackager</artifactId>
+                <version>1.7.5</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>com.ch.tusk.main.MusicPlayerFX</mainClass>
+                            <bundleJre>true</bundleJre>
+                            <jrePath>C:\Users\F776\IdeaProjects\MusicPlayer\target\MusicPlayerFX</jrePath>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -173,6 +192,13 @@
             <version>RELEASE</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>io.github.fvarrui</groupId>
+            <artifactId>javapackager</artifactId>
+            <version>1.7.5</version>
+        </dependency>
+
     </dependencies>
 
 

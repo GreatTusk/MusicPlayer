@@ -343,6 +343,10 @@ public class MediaListPlayer {
                 String formattedTotalDuration = StringFormatter.formatDuration(Duration.millis(length));
                 MetaApi meta = mediaPlayer.media().meta();
 
+                for (Meta value : Meta.values()) {
+                    System.out.println(value.toString() + ": " + meta.get(value));
+                }
+
                 Platform.runLater(() -> {
                     String album = meta.get(Meta.ALBUM);
                     Constants.PLAYBACK_CONTROLLER.setLblDuration(formattedTotalDuration);

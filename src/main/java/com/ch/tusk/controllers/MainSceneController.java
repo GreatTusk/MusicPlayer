@@ -51,11 +51,8 @@ public class MainSceneController implements Initializable {
 
     @FXML
     private TreeView<String> mediaTreeView;
-
-    //    @FXML
-//    private ImageView coverAlbum;
-//    @FXML
-//    private VBox treeViewVBox;
+    @FXML
+    private ListView<String> tracksListView;
 //    @FXML
 //    private TextField txtSongQuery, txtYoutube;
     private FileChooserManager fileChooserManager;
@@ -69,6 +66,10 @@ public class MainSceneController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         initialize();
+    }
+
+    public ListView<String> getTracksListView() {
+        return tracksListView;
     }
 
     private void initialize() {
@@ -342,7 +343,7 @@ public class MainSceneController implements Initializable {
     }
 
 
-    public void displayAlert() throws IOException {
+    public void reloadMusicLibrary() throws IOException {
 
         var alert = new AlertFX(Alert.AlertType.CONFIRMATION, "Media Discovery", "Reloading the entire library may take some time.",
                 "Are you sure you want to proceed?", MusicPlayerFX.createCustomIcon());
@@ -367,7 +368,7 @@ public class MainSceneController implements Initializable {
                     Task<Void> backgroundTask = new Task<>() {
                         @Override
                         protected Void call() {
-                            extractJSON(json, mediaTreeView);
+                            json.extractJSON(mediaTreeView, tracksListView);
                             return null;
                         }
                     };
@@ -391,31 +392,13 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    /**
-     * This method is used to extract album data from a JSON file and load it into the media tree view.
-     * It first writes the album array to the JSON file. The album array is created from the media player's music directories,
-     * which are obtained from the status JSON file.
-     * Then, it loads the album array from the JSON file into the media tree view.
-     * The loading is done on the JavaFX Application thread to ensure that the UI is updated correctly.
-     *
-     * @param json          The Json object used to handle JSON operations.
-     * @param mediaTreeView The TreeView object that represents the media tree view in the UI.
-     */
-    public void extractJSON(Json json, TreeView<String> mediaTreeView) {
-
-        try {
-            json.writeAlbumArrayToJSON(json.createAlbumArray(Constants.MEDIA_LIST_PLAYER,
-                    json.obtainMusicDirectories(json.loadStatusJson(Constants.STATUS_JSON_LOCATION).musicFolders())
-            ), Constants.ALBUM_JSON_LOCATION);
-
-        } catch (IOException ignored) {
-        }
-
-        Platform.runLater(() -> {
-            json.loadAlbumArray(Constants.ALBUM_JSON_LOCATION, mediaTreeView,
-                    Constants.PLAYBACK_CONTROLLER.getLblStatus());
-        });
+    public void switchToAlbumPane(){
+        mediaTreeView.toFront();
     }
+    public void switchToTracksPane(){
+        tracksListView.toFront();
+    }
+
 
     public void orderByYear() {
 //        if (!songListObservable.isEmpty()) {

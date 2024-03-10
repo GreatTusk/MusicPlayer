@@ -133,6 +133,34 @@
     -fx-fill: #3498db; /* Blue fill color for the arrow */
 }
 
+/* Styling for ListView */
+.list-view {
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
+    -fx-text-fill: #ffffff; /* White font color */
+    -fx-font-family: "Roboto";
+    -fx-font-size: 14;
+}
+
+/* Styling for ListItems */
+.list-view .list-cell {
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #2c3e50); /* Gradient background */
+    -fx-text-fill: #ffffff; /* White font color */
+}
+
+/* Styling for selected items in ListView */
+.list-view .list-cell:selected {
+    -fx-background-color: linear-gradient(to bottom right, #2c3e50, #3498db); /* Blue gradient for selected items */
+    -fx-text-fill: #ffffff; /* White text color for selected items */
+}
+
+/* Styling for hover effect on ListView items */
+.list-view .list-cell:hover {
+    -fx-background-color: linear-gradient(to bottom right, #3c3e44, #4a6572); /* Yellow gradient for hover effect */
+}
+.list-view .list-cell:pressed {
+    -fx-background-color: linear-gradient(to bottom right, #2c3e50, #7d7f8d);
+}
+
 /* Styling for all vertical scrollbars */
 .scroll-bar:vertical {
     -fx-background-color: #3c3e44; /* Dark slate gray background color */
@@ -325,7 +353,7 @@
 }
 
 #menuBarVbox {
-    -fx-background-color: linear-gradient(to top, #3c3e44, #2c3e50);
+    -fx-background-color: linear-gradient(to top right, #3c3e44, #2c3e50);
 }
 
 #hbxStatus {
