@@ -17,5 +17,9 @@ import java.util.List;
  * @param songs     A list of songs on the album.
  * @param imageURL  The URL of the album's image.
  */
-public record Album(String albumName, List<String> songs, String imageURL) {
+public record Album(String albumName, List<Song> songs, String imageURL) implements Comparable<Album> {
+    @Override
+    public int compareTo(Album other) {
+        return this.albumName.compareTo(other.albumName);
+    }
 }

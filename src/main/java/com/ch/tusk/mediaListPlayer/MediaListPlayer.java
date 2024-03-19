@@ -6,13 +6,9 @@ package com.ch.tusk.mediaListPlayer;
 
 
 import com.ch.tusk.json.Constants;
-import com.ch.tusk.mediaplayerutil.ImageUtil;
 import com.ch.tusk.mediaplayerutil.StringFormatter;
 import javafx.application.Platform;
-import javafx.scene.control.MultipleSelectionModel;
-import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
-import javafx.util.Duration;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.media.*;
 import uk.co.caprica.vlcj.medialist.MediaList;
@@ -38,7 +34,6 @@ public class MediaListPlayer {
     private MediaPlayer mediaPlayer;
     private Image[] imageArray;
     private MediaList mediaList;
-    private String previousAlbum = "";
 
 
     //private ArrayList<String> pathsArray;
@@ -92,6 +87,7 @@ public class MediaListPlayer {
         mediaListPlayer.mediaPlayer().setMediaPlayer(mediaPlayer);
         MediaListRef mediaListRef = mediaList.newMediaListRef();
         mediaListPlayer.list().setMediaList(mediaListRef);
+        mediaListRef.release();
     }
 
     /**
@@ -164,7 +160,7 @@ public class MediaListPlayer {
             }
 
             @Override
-            /**
+            /*
              * This method is triggered when the media list player moves to the next item in the media list.
              * It prepares the media for the next item and starts playing it.
              *
@@ -237,15 +233,15 @@ public class MediaListPlayer {
             public void finished(MediaPlayer mediaPlayer) {
                 try {
                     // Get the selection model of the media tree view
-                    MultipleSelectionModel<TreeItem<String>> selectionModel = Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel();
+                    var selectionModel = Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel();
                     // Get the currently selected item
-                    TreeItem<String> selectedItem = selectionModel.getSelectedItem();
+                    var selectedItem = selectionModel.getSelectedItem();
                     // Get the parent of the selected item
-                    TreeItem<String> parentItem = selectedItem.getParent();
+                    var parentItem = selectedItem.getParent();
                     // Get the first child of the parent item
-                    TreeItem<String> firstChild = parentItem.getChildren().getFirst();
+                    var firstChild = parentItem.getChildren().getFirst();
                     // Get the last child of the parent item
-                    TreeItem<String> lastChild = parentItem.getChildren().getLast();
+                    var lastChild = parentItem.getChildren().getLast();
 
                     // If the selected item is the last child, select the first child
                     if (lastChild.equals(selectedItem)) {
@@ -253,17 +249,18 @@ public class MediaListPlayer {
                     } else {
                         // Otherwise, select the next sibling of the selected item
                         selectionModel.selectNext();
+                        mediaListPlayer.controls().playNext();
                     }
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
 
             @Override
             public void timeChanged(MediaPlayer mediaPlayer, long newTime) {
                 long length = mediaPlayer.status().length();
-                String formattedCurrentTime = StringFormatter.formatDuration(Duration.millis(newTime));
+                String formattedCurrentTime = StringFormatter.formatDuration(newTime);
                 Platform.runLater(() -> {
-
                     Constants.PLAYBACK_CONTROLLER.setLblCurrentTime(formattedCurrentTime);
                     Constants.PLAYBACK_CONTROLLER.setPbgSong((double) newTime / length);
                 });
@@ -307,7 +304,7 @@ public class MediaListPlayer {
             @Override
             public void volumeChanged(MediaPlayer mediaPlayer, float volume) {
 
-                if (volume != -1 && !isMuted()) {
+                if (volume != -1 && isNotMuted()) {
                     Platform.runLater(() -> {
                         if (volume == 0) {
                             Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageArray[1]);
@@ -315,7 +312,7 @@ public class MediaListPlayer {
                             Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageArray[2]);
                         } else if (volume < 0.66) {
                             Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageArray[3]);
-                        } else if (volume <= 1){
+                        } else if (volume <= 1) {
                             Constants.PLAYBACK_CONTROLLER.setLblVolumeImage(imageArray[4]);
                         }
                     });
@@ -339,36 +336,9 @@ public class MediaListPlayer {
 
             @Override
             public void mediaPlayerReady(MediaPlayer mediaPlayer) {
-                long length = mediaPlayer.status().length();
-                String formattedTotalDuration = StringFormatter.formatDuration(Duration.millis(length));
-                MetaApi meta = mediaPlayer.media().meta();
-
-                for (Meta value : Meta.values()) {
-                    System.out.println(value.toString() + ": " + meta.get(value));
-                }
-
-                Platform.runLater(() -> {
-                    String album = meta.get(Meta.ALBUM);
-                    Constants.PLAYBACK_CONTROLLER.setLblDuration(formattedTotalDuration);
-                    Constants.PLAYBACK_CONTROLLER.setLblSongName(meta.get(Meta.TITLE));
-                    if (!album.equals(previousAlbum)) {
-                        Constants.PLAYBACK_CONTROLLER.setLblSongAlbum(album);
-                    }
-                    Constants.PLAYBACK_CONTROLLER.setLblSongArtist(meta.get(Meta.ARTIST));
-
-                    TreeItem<String> selectedItem = Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel().getSelectedItem();
-
-                    if (selectedItem.isLeaf() && !album.equals(previousAlbum)) {
-
-                        Constants.PLAYBACK_CONTROLLER.setCoverArt(meta.get(Meta.ARTWORK_URL) != null
-                                ? new Image(meta.get(Meta.ARTWORK_URL)) : ImageUtil.createThumbnail(
-                                Constants.DEFAULT_ALBUM, 75));
-                    }
-
-                    previousAlbum = album;
-
-                });
-
+                Platform.runLater(() ->
+                        Constants.PLAYBACK_CONTROLLER.setLblDuration(StringFormatter.formatDuration(mediaPlayer.status().length())
+                        ));
             }
 
             @Override
@@ -466,9 +436,7 @@ public class MediaListPlayer {
      * This method allows playing some file after it's been paused.
      */
     public void playMedia() {
-        if (!mediaListPlayer.status().isPlaying()) {
-            mediaListPlayer.controls().play();
-        }
+        mediaListPlayer.controls().play();
     }
 
     public boolean isPlaying() {
@@ -501,7 +469,7 @@ public class MediaListPlayer {
      * instantiated and the media is currently playing.
      */
     public void pauseMedia() {
-        if (mediaPlayer.status().isPlaying() && mediaPlayer.status().canPause()) {
+        if (mediaPlayer.status().canPause()) {
             mediaListPlayer.controls().pause();
         }
 
@@ -532,15 +500,15 @@ public class MediaListPlayer {
     }
 
     public void playNext() {
-        MultipleSelectionModel<TreeItem<String>> selectionModel = Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel();
-        TreeItem<String> selectedItem = selectionModel.getSelectedItem();
+        var selectionModel = Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel();
+        var selectedItem = selectionModel.getSelectedItem();
 
         if (selectedItem.nextSibling() != null) {
             // If there is a next sibling, select it
             selectionModel.selectNext();
         } else {
             // If there is no next sibling, select the first child of the parent
-            TreeItem<String> parentItem = selectedItem.getParent();
+            var parentItem = selectedItem.getParent();
             if (parentItem != null && !parentItem.getChildren().isEmpty()) {
                 selectionModel.select(parentItem.getChildren().getFirst());
             }
@@ -551,14 +519,14 @@ public class MediaListPlayer {
     }
 
     public void playPrevious() {
-        MultipleSelectionModel<TreeItem<String>> selectionModel = Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel();
-        TreeItem<String> selectedItem = selectionModel.getSelectedItem();
+        var selectionModel = Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel();
+        var selectedItem = selectionModel.getSelectedItem();
         if (selectionModel.getSelectedItem().previousSibling() != null) {
             selectionModel.selectPrevious();
 
         } else {
             // If there is no previous sibling, select the last child of the parent
-            TreeItem<String> parentItem = selectedItem.getParent();
+            var parentItem = selectedItem.getParent();
             if (parentItem != null && !parentItem.getChildren().isEmpty()) {
                 selectionModel.select(parentItem.getChildren().getLast());
             }
@@ -599,8 +567,7 @@ public class MediaListPlayer {
 
     public void play(String mrl) {
 
-        mediaPlayer.media().startPaused(mrl);
-        mediaPlayer.controls().play();
+        mediaPlayer.media().play(mrl);
     }
 
     public void mute() {
@@ -608,8 +575,8 @@ public class MediaListPlayer {
 
     }
 
-    public boolean isMuted() {
-        return mediaPlayer.audio().isMute();
+    public boolean isNotMuted() {
+        return !mediaPlayer.audio().isMute();
     }
 
     private int matchReference(MediaRef media) {
@@ -650,7 +617,7 @@ public class MediaListPlayer {
     public void shuffle() {
         Random random = new Random();
         play(random.nextInt(getPlaylistSize()));
-        MultipleSelectionModel<TreeItem<String>> selectionModel = Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel();
+        var selectionModel = Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel();
         selectionModel.select(selectionModel.getSelectedItem().getParent().getChildren().get(matchReference()));
     }
 

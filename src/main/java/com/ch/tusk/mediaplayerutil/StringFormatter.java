@@ -55,6 +55,7 @@ public abstract class StringFormatter {
     }
 
     public static String getFileNameFromMrl(String mrl) {
+        if (mrl.isEmpty()) return "";
         return getNameWithoutExtension(Paths.get(URI.create(mrl)).getFileName().toString());
     }
 

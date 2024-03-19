@@ -15,6 +15,7 @@ import javafx.scene.input.MouseEvent;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Objects;
+import java.util.Random;
 import java.util.ResourceBundle;
 
 
@@ -99,25 +100,25 @@ public class PlaybackController implements Initializable {
         lblReset.setOnAction(event -> resetMedia());
         lblForward.setOnAction(event -> forward());
         lblRewind.setOnAction(event -> rewind());
-        lblShuffle.setOnAction(event -> Constants.MEDIA_LIST_PLAYER.shuffle());
-        lblVolume.setOnAction(event -> {
-            Platform.runLater(() -> {
-                if (!Constants.MEDIA_LIST_PLAYER.isMuted()) {
-                    volume = Constants.MEDIA_LIST_PLAYER.getVolume();
-                } else {
-                    volumeBar.setValue(volume);
-                }
-                Constants.MEDIA_LIST_PLAYER.mute();
-            });
-        });
-        lblPlay.setOnAction(event -> {
-            if (Constants.MEDIA_LIST_PLAYER.isPlaying()) {
-                Constants.MEDIA_LIST_PLAYER.pauseMedia();
-            } else {
-                playMedia();
-            }
+        lblShuffle.setOnAction(event -> shuffle());
+        lblVolume.setOnAction(event ->
+                Platform.runLater(() -> {
+                    if (Constants.MEDIA_LIST_PLAYER.isNotMuted()) {
+                        volume = Constants.MEDIA_LIST_PLAYER.getVolume();
+                    } else {
+                        volumeBar.setValue(volume);
+                    }
+                    Constants.MEDIA_LIST_PLAYER.mute();
+                }));
+        lblPlay.setOnAction(
+                event -> {
+                    if (Constants.MEDIA_LIST_PLAYER.isPlaying()) {
+                        Constants.MEDIA_LIST_PLAYER.pauseMedia();
+                    } else {
+                        playMedia();
+                    }
 
-        });
+                });
 
 
     }
@@ -140,6 +141,25 @@ public class PlaybackController implements Initializable {
             updateProgressBar(progress);
             seekMediaPlayer(progress);
         }
+    }
+
+    public void shuffle() {
+        Constants.MAIN_SCENE_CONTROLLER.getSelectedTreeViewItem().ifPresent(
+                treeItem -> {
+                    var album = treeItem.getParent().getChildren();
+                    var index = album.indexOf(treeItem);
+                    var size = album.size();
+                    if (size > 1) {
+                        var random = new Random();
+                        int randomIndex;
+                        do {
+                            randomIndex = random.nextInt(size);
+                        } while (randomIndex == index);
+                        Constants.MAIN_SCENE_CONTROLLER.getMediaTreeView().getSelectionModel().select(album.get(randomIndex));
+                    }
+
+                }
+        );
     }
 
     // On mouse released

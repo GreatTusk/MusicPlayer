@@ -7,31 +7,35 @@ import com.ch.tusk.json.Json;
 import com.ch.tusk.main.MusicPlayerFX;
 import com.ch.tusk.mediaplayerutil.FileChooserManager;
 import com.ch.tusk.mediaplayerutil.FolderChooserManager;
-import com.ch.tusk.mediaplayerutil.StringFormatter;
-import com.ch.tusk.model.Album;
+import com.ch.tusk.mediaplayerutil.ImageUtil;
+import com.ch.tusk.model.AlbumTreeItem;
+import com.ch.tusk.model.MediaTreeItem;
+import com.ch.tusk.model.Song;
+import com.ch.tusk.model.SongTreeItem;
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import uk.co.caprica.vlcj.medialist.MediaList;
-import uk.co.caprica.vlcj.medialist.MediaListRef;
+import javafx.stage.WindowEvent;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class MainSceneController implements Initializable {
@@ -48,12 +52,15 @@ public class MainSceneController implements Initializable {
 //    private CheckMenuItem includeSubfolders;
     @FXML
     private BorderPane borderPane;
+    private String previousAlbum = "";
+    @FXML
+    private TreeView<MediaTreeItem> mediaTreeView;
 
     @FXML
-    private TreeView<String> mediaTreeView;
+    private Button btnHide, btnMinMaxWindow, btnClose;
     @FXML
-    private ListView<String> tracksListView;
-//    @FXML
+    private ListView<MediaTreeItem> tracksListView;
+    //    @FXML
 //    private TextField txtSongQuery, txtYoutube;
     private FileChooserManager fileChooserManager;
     private FolderChooserManager folderChooserManager;
@@ -62,22 +69,69 @@ public class MainSceneController implements Initializable {
 
     @FXML
     private Button btnSearch, btnPlaylist, btnAlbum, btnSettings, btnTrack;
+    @FXML
+    private HBox menuBar;
+    private double xOffset = 0;
+    private double yOffset = 0;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         initialize();
     }
 
-    public ListView<String> getTracksListView() {
+    public ListView<MediaTreeItem> getTracksListView() {
         return tracksListView;
     }
 
     private void initialize() {
         loadPlaybackController();
         setButtonIcons();
+        initializeListView();
         initializeTreeView();
-        setTreeViewListener();
         initializeGlobalVariables();
+
+        btnClose.setOnAction(e -> {
+            Stage window = (Stage) borderPane.getScene().getWindow();
+            window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+        });
+
+        btnHide.setOnAction(e -> {
+            Stage window = (Stage) borderPane.getScene().getWindow();
+            window.setIconified(true);
+        });
+
+        btnMinMaxWindow.setOnAction(e -> {
+            Stage window = (Stage) borderPane.getScene().getWindow();
+            window.setMaximized(!window.isMaximized());
+        });
+
+        menuBar.setOnMousePressed(event -> {
+            xOffset = event.getSceneX();
+            yOffset = event.getSceneY();
+        });
+
+        menuBar.setOnMouseDragged(event -> {
+            Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            window.setX(event.getScreenX() - xOffset);
+            window.setY(event.getScreenY() - yOffset);
+        });
+
+        menuBar.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) {
+                Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                window.setMaximized(!window.isMaximized());
+            }
+        });
+
+    }
+
+    private void initializeListView() {
+        tracksListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        tracksListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null && oldValue != newValue) {
+                handleClickOnListView(newValue);
+            }
+        });
     }
 
     private void initializeGlobalVariables() {
@@ -96,7 +150,7 @@ public class MainSceneController implements Initializable {
      */
     private void setButtonIcons() {
         String path = "/images/";
-        Button[] buttons = {btnSearch, btnPlaylist, btnAlbum, btnTrack, btnSettings};
+        Button[] buttons = {btnSearch, btnPlaylist, btnAlbum, btnTrack, btnSettings, btnHide, btnMinMaxWindow, btnClose};
 
         for (int i = 0; i < buttons.length; i++) {
             var imageView = new IconImageView(buttons[i].getPrefHeight(), buttons[i].getPrefWidth());
@@ -128,120 +182,125 @@ public class MainSceneController implements Initializable {
     }
 
     private void initializeTreeView() {
-        TreeItem<String> root = new TreeItem<>("My Albums");
+        TreeItem<MediaTreeItem> root = new TreeItem<>();
         mediaTreeView.setRoot(root);
-        Platform.runLater(() -> {
-            ScrollBar verticalBar = (ScrollBar) mediaTreeView.lookup(".scroll-bar:vertical");
-            ScrollBar horizontalBar = (ScrollBar) mediaTreeView.lookup(".scroll-bar:horizontal");
-//            verticalBar.setCursor(Cursor.V_RESIZE);
-//            horizontalBar.setCursor(Cursor.H_RESIZE);
-            root.setExpanded(true);
+        Platform.runLater(() -> root.setExpanded(true));
+        mediaTreeView.getSelectionModel().selectionModeProperty().set(SelectionMode.SINGLE);
+        mediaTreeView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null && oldValue != newValue) {
+                Platform.runLater(() -> handleClickOnTreeView(newValue));
+            }
         });
+
     }
 
-    /**
-     * This method sets a listener for mouse press events on the mediaTreeView.
-     * The listener performs several actions when a leaf node (representing a song) is selected:
-     * 1. If the selected song is currently playing, it seeks to the start of the song and aborts further actions.
-     * 2. If the selected song is not in the current playlist, it loads the playlist that contains the selected song.
-     * 3. If a song is currently playing, it stops the playback.
-     * 4. Finally, it starts playing the selected song.
-     */
-    private void setTreeViewListener() {
-        // Keep in mind that the order of the branches corresponds to the order of the MediaListRefs
-        mediaTreeView.setOnMousePressed(event -> {
-
-            TreeItem<String> selectedItem = mediaTreeView.getSelectionModel().getSelectedItem();
-
-            // If the selected item is not a "song", abort.
-            if (selectedItem == null || !selectedItem.isLeaf()) {
-                return;
-            }
-
-            String currentlyPlayedMrl = Constants.MEDIA_LIST_PLAYER.currentlyPlayedMrl();
-
-            if (!currentlyPlayedMrl.isEmpty()) {
-                // Check if the selected item is the same as the song currently playing. If so, seek to 0 and abort.
-                if (selectedItem.getValue().equals(StringFormatter.getFileNameFromMrl(currentlyPlayedMrl))) {
-                    Constants.MEDIA_LIST_PLAYER.seek(0);
-                    return;
-                }
-            }
-
-            List<String> currentPlaylistMrl = Constants.MEDIA_LIST_PLAYER.getMediaListPlayer().list().media().mrls();
-            // Check if the current playlist contains the song playing right now/previously
-            if (!playlistContainsSelectedItem(currentPlaylistMrl, selectedItem.getValue())) {
-                loadPlaylist(selectedItem, mediaTreeView.getRoot().getChildren());
-            }
-
-            // Stop playback if a song is playing
-            if (Constants.MEDIA_LIST_PLAYER.isPlaying()) {
-                Constants.MEDIA_LIST_PLAYER.stopMedia();
-            }
-
-            playSelectedItem(selectedItem.getValue());
-        });
+    public void handleClickOnTreeView(TreeItem<MediaTreeItem> selectedItem) {
+        var value = (SongTreeItem) selectedItem.getValue();
+        playSelectedItem(value, selectedItem);
     }
 
-    /**
-     * This method is used to load a playlist into the media player.
-     * It first finds the index of the parent of the selected item in the tree view.
-     * Then, it creates a new playlist and loads the album at the found index from a JSON file.
-     * It adds all songs from the loaded album to the playlist.
-     * After the playlist is ready, it sets the playlist to the media player and releases the resources.
-     *
-     * @param selectedItem The selected item in the tree view.
-     * @param allChildren  All children of the root node in the tree view.
-     */
-    private void loadPlaylist(TreeItem<String> selectedItem, ObservableList<TreeItem<String>> allChildren) {
-        int index = allChildren.indexOf(selectedItem.getParent());
-
-        // Creation of a new playlist
-        MediaList mediaList = Constants.MEDIA_LIST_PLAYER.createMediaList();
-
-        ArrayList<Album> albums = json.loadAlbumArrayFromJson(Constants.ALBUM_JSON_LOCATION);
-        Album selectedAlbum = albums.get(index);
-
-        selectedAlbum.songs().forEach(songMrl -> mediaList.media().add(songMrl));
-
-        // Playlist is ready
-        MediaListRef mediaListRef = mediaList.newMediaListRef();
-
-        // Setting the playlist to the Constants.MEDIA_LIST_PLAYER
-        Constants.MEDIA_LIST_PLAYER.setMediaList(mediaListRef);
-
-        // Releasing resources
-        mediaList.release();
-        mediaListRef.release();
+    public Optional<TreeItem<MediaTreeItem>> getSelectedTreeViewItem() {
+        var selectedItem = mediaTreeView.getSelectionModel().getSelectedItem();
+        if (selectedItem != null && selectedItem.getValue() instanceof SongTreeItem) {
+            return Optional.of(selectedItem);
+        } else {
+            return Optional.empty();
+        }
     }
+
+    public Optional<MediaTreeItem> getSelectedListViewItem() {
+        var selectedItem = (SongTreeItem) tracksListView.getSelectionModel().getSelectedItem();
+        if (selectedItem != null) {
+            return Optional.of(selectedItem);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public void handleClickOnListView(MediaTreeItem selectedItem) {
+        playSelectedItem(selectedItem);
+    }
+
 
     /**
      * This method is used to play a selected item in the media player.
      * It first matches the selected item to a media reference in the media player.
      * Then, it plays the matched media reference.
      * Finally, it updates the status label in the playback controller to "Playing...".
-     *
-     * @param selectedItem The selected item to be played.
      */
-    private void playSelectedItem(String selectedItem) {
-        Constants.MEDIA_LIST_PLAYER.play(Constants.MEDIA_LIST_PLAYER.matchReference(selectedItem));
+    private void playSelectedItem(SongTreeItem songTreeItem, TreeItem<MediaTreeItem> songItem) {
+        Constants.MEDIA_LIST_PLAYER.play(songTreeItem.song().path());
+        Platform.runLater(() -> displaySongMetadata(songItem, songTreeItem));
+    }
+
+    private void displaySongMetadata(TreeItem<MediaTreeItem> songItem, SongTreeItem value) {
+        Song song = value.song();
+        var album = song.album();
+        var artist = song.artist();
+        var title = song.title();
+        Constants.PLAYBACK_CONTROLLER.setLblSongName(title);
+        Constants.PLAYBACK_CONTROLLER.setLblSongArtist(artist);
+
+        if (!album.equals(previousAlbum)) {
+            Constants.PLAYBACK_CONTROLLER.setLblSongAlbum(album);
+            var albumTreeItem = songItem.getParent();
+            var albumWrapper = (AlbumTreeItem) albumTreeItem.getValue();
+            var imageView = (ImageView) albumTreeItem.getGraphic();
+
+            String imageURL = albumWrapper.album().imageURL();
+            Constants.PLAYBACK_CONTROLLER.setCoverArt(imageURL != null
+                    ? ImageUtil.createThumbnail(
+                    new Image(imageURL), 80) : imageView.getImage());
+
+//                            Constants.PLAYBACK_CONTROLLER.setCoverArt(
+//                                    imageView.getImage()
+//                            );
+        }
+
+        previousAlbum = album;
         Constants.PLAYBACK_CONTROLLER.setLblStatus("Playing...");
     }
 
-    /**
-     * This method checks if the current playlist contains the selected item.
-     * It uses the Java 8 Stream API to iterate over the current playlist and checks if any of the media resource locators (MRLs) match the selected item.
-     * The matching is done by comparing the file name extracted from the MRL with the selected item.
-     *
-     * @param currentPlaylistMrl A list of MRLs in the current playlist.
-     * @param selectedItem       The selected item to be checked if it's in the playlist.
-     * @return true if the selected item is in the playlist, false otherwise.
-     */
-    private boolean playlistContainsSelectedItem(List<String> currentPlaylistMrl, String selectedItem) {
-        return currentPlaylistMrl.stream().anyMatch(mrl -> StringFormatter.getFileNameFromMrl(mrl).equals(selectedItem));
+    private void playSelectedItem(MediaTreeItem songItem) {
+        var value = (SongTreeItem) songItem;
+        Constants.MEDIA_LIST_PLAYER.play(value.song().path());
+        Platform.runLater(() -> {
+
+            Song song = value.song();
+            var album = song.album();
+            var artist = song.artist();
+            var title = song.title();
+            Constants.PLAYBACK_CONTROLLER.setLblSongName(title);
+            Constants.PLAYBACK_CONTROLLER.setLblSongArtist(artist);
+
+            if (!album.equals(previousAlbum)) {
+                Constants.PLAYBACK_CONTROLLER.setLblSongAlbum(album);
+
+                String imageURL = getAlbumCoverURL(songItem);
+                if (imageURL != null) {
+                    Constants.PLAYBACK_CONTROLLER.setCoverArt(ImageUtil.createThumbnail(
+                            new Image(imageURL), 75));
+                }
+
+            }
+
+            previousAlbum = album;
+        });
+        Constants.PLAYBACK_CONTROLLER.setLblStatus("Playing...");
     }
 
-    public TreeView<String> getMediaTreeView() {
+    public String getAlbumCoverURL(MediaTreeItem mediaTreeItem) {
+        Optional<TreeItem<MediaTreeItem>> optionalTreeItem = getMediaTreeView().getRoot().getChildren().stream().filter(treeItem -> treeItem.getValue().equals(mediaTreeItem)).findAny();
+        if (optionalTreeItem.isPresent()) {
+            var albumTreeItem = optionalTreeItem.get().getParent();
+            var albumWrapper = (AlbumTreeItem) albumTreeItem.getValue();
+            return albumWrapper.album().imageURL();
+        } else {
+            return null;
+        }
+    }
+
+    public TreeView<MediaTreeItem> getMediaTreeView() {
         return mediaTreeView;
     }
 
@@ -309,6 +368,9 @@ public class MainSceneController implements Initializable {
         return filePath;
     }
 
+    /**
+     * TODO - This method is not yet implemented.
+     */
     public void addMusicFolder() {
         addMusicFolder(folderChooserManager.showFolderChooser((Stage) borderPane.getScene().getWindow()));
     }
@@ -343,7 +405,7 @@ public class MainSceneController implements Initializable {
     }
 
 
-    public void reloadMusicLibrary() throws IOException {
+    public void reloadMusicLibrary() {
 
         var alert = new AlertFX(Alert.AlertType.CONFIRMATION, "Media Discovery", "Reloading the entire library may take some time.",
                 "Are you sure you want to proceed?", MusicPlayerFX.createCustomIcon());
@@ -351,7 +413,7 @@ public class MainSceneController implements Initializable {
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 FXMLLoader loaderLoadingScreen = new FXMLLoader(getClass().getResource("/fxml/loadingScreen.fxml"));
-                Parent loadingRoot = null;
+                Parent loadingRoot;
                 try {
                     loadingRoot = loaderLoadingScreen.load();
                 } catch (IOException e) {
@@ -380,9 +442,7 @@ public class MainSceneController implements Initializable {
 
                     backgroundTask.setOnFailed((WorkerStateEvent event) -> {
                         Throwable exception = backgroundTask.getException();
-                        if (exception != null) {
-                            System.out.println(exception);
-                        }
+                        throw new RuntimeException(exception);
                     });
 
                     new Thread(backgroundTask).start();
@@ -392,39 +452,16 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    public void switchToAlbumPane(){
+    public void switchToAlbumPane() {
         mediaTreeView.toFront();
     }
-    public void switchToTracksPane(){
+
+    public void switchToTracksPane() {
         tracksListView.toFront();
     }
 
 
     public void orderByYear() {
-//        if (!songListObservable.isEmpty()) {
-//            List<MusicFile> musicFilesToSort;
-//
-//            if (songListObservable.equals(allSongs)) {
-//                musicFilesToSort = new ArrayList<>(songsArray);
-//            } else {
-//                musicFilesToSort = songListObservable.stream()
-//                        .map(this::matchMusicFile)
-//                        .collect(Collectors.toList());
-//            }
-//
-//            musicFilesToSort.sort(Comparator.comparing(MusicFile::getYear, String.CASE_INSENSITIVE_ORDER));
-//
-//            if (ckbDoReverse.isSelected()) {
-//                Collections.reverse(musicFilesToSort);
-//            }
-//
-//            songListObservable.clear();
-//
-//            for (MusicFile musicFile : musicFilesToSort) {
-//                songListObservable.add(StringFormatter.formatFileName(musicFile.getName()));
-//            }
-//            variables.setLblStatus("Ordered by year of release.");
-//        }
     }
 
     public void filterSongsByName(ActionEvent e) {

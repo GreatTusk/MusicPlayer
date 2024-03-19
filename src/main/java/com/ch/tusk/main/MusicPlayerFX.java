@@ -17,6 +17,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
 
 import java.io.File;
@@ -62,6 +63,7 @@ public class MusicPlayerFX extends Application {
         loadingStage.setResizable(false);
         loadingStage.getIcons().add(Constants.APP_ICON);
         loadingStage.setTitle("Music Player FX");
+        loadingStage.initStyle(StageStyle.UNDECORATED);
         loadingStage.show();
         return loadingStage;
     }
@@ -149,6 +151,7 @@ public class MusicPlayerFX extends Application {
         stage.setTitle("Music Player FX");
 
         stage.setResizable(true);
+        stage.initStyle(StageStyle.UNDECORATED);
 
         // Adding the scene to the stage
         stage.getIcons().add(Constants.APP_ICON);
@@ -237,7 +240,7 @@ public class MusicPlayerFX extends Application {
 
         // Get the DialogPane of the alert and add the "styled-alert" style class to it.
         alert.getDialogPane().getStyleClass().add("styled-alert");
-
+        alert.initStyle(StageStyle.UNDECORATED);
         // Show the alert and wait for the user's response.
         alert.showAndWait()
                 .ifPresent(response -> {

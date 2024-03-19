@@ -29,7 +29,7 @@ public class FolderChooserManager {
      */
     public FolderChooserManager() {
         directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("Open Folder");
+        directoryChooser.setTitle("Select a music folder");
     }
 
     /**

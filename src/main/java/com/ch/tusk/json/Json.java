@@ -7,13 +7,8 @@ package com.ch.tusk.json;
 import com.ch.tusk.controllers.LoadingScreenController;
 import com.ch.tusk.customnodes.IconImageView;
 import com.ch.tusk.mediaListPlayer.MediaListPlayer;
-import com.ch.tusk.mediametadata.NumericFilenameComparator;
 import com.ch.tusk.mediaplayerutil.ImageUtil;
-import com.ch.tusk.mediaplayerutil.StringFormatter;
-import com.ch.tusk.model.Album;
-import com.ch.tusk.model.AlbumTypeAdapter;
-import com.ch.tusk.model.Status;
-import com.ch.tusk.model.StatusTypeAdapter;
+import com.ch.tusk.model.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -65,8 +60,8 @@ public class Json {
 
     }
 
-    public void extractJSON(MediaListPlayer mediaListPlayer, TreeView<String> mediaTreeView,
-                            ListView<String> mediaListView,
+    public void extractJSON(MediaListPlayer mediaListPlayer, TreeView<MediaTreeItem> mediaTreeView,
+                            ListView<MediaTreeItem> mediaListView,
                             LoadingScreenController loaderLoadingScreen) throws IOException {
 
         boolean loadStatusJSON = isFirstRuntime(Constants.STATUS_JSON_LOCATION);
@@ -75,7 +70,7 @@ public class Json {
             Platform.runLater(() -> loaderLoadingScreen.setLblProgress("Performing initial setup. This may take a while."));
             writeStatusJSON(Constants.STATUS_JSON_LOCATION, false);
             try {
-                writeAlbumArrayToJSON(createAlbumArray(mediaListPlayer,
+                writeAlbumArrayToJSON(createAlbumSet(mediaListPlayer,
                         obtainMusicDirectories(
                                 Constants.DEFAULT_MUSIC_FOLDER
                         )
@@ -84,16 +79,20 @@ public class Json {
             } catch (IOException ignored) {
             }
         }
-        Platform.runLater(() -> loaderLoadingScreen.setLblProgress("Loading albums..."));
-        loadAlbumArray(Constants.ALBUM_JSON_LOCATION, mediaTreeView, mediaListView,
-                Constants.PLAYBACK_CONTROLLER.getLblStatus());
+
+        Platform.runLater(() -> {
+            loaderLoadingScreen.setLblProgress("Loading albums...");
+            loadAlbumArray(Constants.ALBUM_JSON_LOCATION, mediaTreeView, mediaListView,
+                    Constants.PLAYBACK_CONTROLLER.getLblStatus());
+        });
+
 
     }
 
-    public void extractJSON(TreeView<String> mediaTreeView, ListView<String> mediaListView) {
+    public void extractJSON(TreeView<MediaTreeItem> mediaTreeView, ListView<MediaTreeItem> mediaListView) {
 
         try {
-            writeAlbumArrayToJSON(createAlbumArray(Constants.MEDIA_LIST_PLAYER,
+            writeAlbumArrayToJSON(createAlbumSet(Constants.MEDIA_LIST_PLAYER,
                     obtainMusicDirectories(loadStatusJson(Constants.STATUS_JSON_LOCATION).musicFolders())
             ), Constants.ALBUM_JSON_LOCATION);
 
@@ -131,7 +130,7 @@ public class Json {
      * @param jsonPath   path to the json file
      * @throws IOException that could occur during the serializing process
      */
-    public void writeAlbumArrayToJSON(ArrayList<Album> albumArray, String jsonPath) throws IOException {
+    public void writeAlbumArrayToJSON(Set<Album> albumArray, String jsonPath) throws IOException {
 
         // Iterating over the sorted entries and adding them to the children
         try (Writer writer = new FileWriter(jsonPath)) {
@@ -225,28 +224,21 @@ public class Json {
      * @param directories     array of directories that contain audioFiles
      * @return arrayList of albums
      */
-    public ArrayList<Album> createAlbumArray(MediaListPlayer mediaListPlayer, Set<String> directories) throws IOException {
+    public Set<Album> createAlbumSet(MediaListPlayer mediaListPlayer, Set<String> directories) throws IOException {
 
         MediaList mediaList = mediaListPlayer.getMediaListPlayer().list().newMediaList();
 
         populateMediaList(directories, mediaList);
 
-        //HashSet<String> albums = new HashSet<>();
-        HashMap<String, List<String>> albumMap = new HashMap<>();
+        HashMap<String, List<Song>> albumMap = new HashMap<>();
         Map<String, String> albumAndUrl = new HashMap<>();
 
         populateAlbumMaps(mediaList, albumMap, albumAndUrl);
 
-        // Sorting the albumMap by keys in natural order
-        List<Map.Entry<String, List<String>>> sortedAlbums = new ArrayList<>(albumMap.entrySet());
-        sortedAlbums.sort(Map.Entry.comparingByKey());
+        Set<Album> albumSet = new TreeSet<>();
+        albumMap.entrySet().forEach(album -> populateAlbum(album, albumSet, albumAndUrl));
 
-        // Array to be written
-        ArrayList<Album> albumArray = new ArrayList<>();
-
-        sortedAlbums.forEach(album -> populateAlbum(album, albumArray, albumAndUrl));
-
-        return albumArray;
+        return albumSet;
     }
 
     /**
@@ -256,15 +248,13 @@ public class Json {
      * @param albumArray  to be filled
      * @param albumAndUrl to obtain the URL of every album's cover art
      */
-    private void populateAlbum(Map.Entry<String, List<String>> entry, ArrayList<Album> albumArray,
+    private void populateAlbum(Map.Entry<String, List<Song>> entry, Set<Album> albumArray,
                                Map<String, String> albumAndUrl) {
 
         String albumName = entry.getKey();
-        List<String> songsList = entry.getValue();
+        List<Song> songsList = entry.getValue();
 
-        if (songsList.size() >= 100) {
-            songsList.sort(new NumericFilenameComparator());
-        }
+        songsList.sort(Comparator.naturalOrder());
 
         // Create a new Album record using the automatically generated constructor
         Album albumObject = new Album(albumName, songsList, albumAndUrl.get(albumName));
@@ -280,13 +270,16 @@ public class Json {
      * @param mediaList   the mediaList that songs are added to
      */
     private void populateMediaList(Set<String> directories, MediaList mediaList) {
-
+        Set<String> songPaths = new HashSet<>();
         directories.forEach(directory -> {
-            String[] songList = new File(directory).list(Constants.AUDIO_NAME_FILTER);
+            var songList = new File(directory).listFiles(Constants.AUDIO_NAME_FILTER);
             if (songList != null) {
-                Arrays.stream(songList).forEach(file -> mediaList.media().add(directory + File.separatorChar + file));
+                Arrays.stream(songList).forEach(file -> songPaths.add(file.getPath()));
             }
         });
+
+        var media = mediaList.media();
+        songPaths.forEach(media::add);
 
     }
 
@@ -342,7 +335,7 @@ public class Json {
      * @param albumMap    map to be populated
      * @param albumAndUrl map to be populated
      */
-    private void populateAlbumMaps(MediaList mediaList, HashMap<String, List<String>> albumMap, Map<String, String> albumAndUrl) {
+    private void populateAlbumMaps(MediaList mediaList, HashMap<String, List<Song>> albumMap, Map<String, String> albumAndUrl) {
 
         List<String> mrls = mediaList.media().mrls();
 
@@ -350,19 +343,40 @@ public class Json {
 
             try {
                 Media media = getParsedMedia(mediaList, i);
-                // THIS MAY BE CAUSING THE ISSUE
                 MetaApi meta = Objects.requireNonNull(media).meta();
-                String album = meta.get(Meta.ALBUM) == null ? "UNKNOWN" : meta.get(Meta.ALBUM);
-                String song = mrls.get(i);
 
-                //Add the song to the album's list in the map
-                albumMap.computeIfAbsent(album, k -> {
-                    // This block is executed only if 'album' is not already present in albumMap
-                    List<String> songs = new ArrayList<>();
-                    albumAndUrl.put(album, meta.get(Meta.ARTWORK_URL));
+                String tempTitle = meta.get(Meta.TITLE);
+                String songTitle = tempTitle == null || tempTitle.isBlank() ? "UNKNOWN" : tempTitle;
+
+                String tempArtist = meta.get(Meta.ARTIST);
+                String songArtist = tempArtist == null || tempArtist.isBlank() ? "UNKNOWN" : tempArtist;
+
+                String tempGenre = meta.get(Meta.GENRE);
+                String songGenre = tempGenre == null || tempGenre.isBlank() ? "UNKNOWN" : tempGenre;
+
+                String tempAlbum = meta.get(Meta.ALBUM);
+                String songAlbum = tempAlbum == null || tempAlbum.isBlank() ? "UNKNOWN" : tempAlbum;
+
+                String tempTrackNumber = meta.get(Meta.TRACK_NUMBER);
+                String songTrackNumber = tempTrackNumber == null || tempTrackNumber.isBlank() ? "UNKNOWN" : tempTrackNumber;
+
+                String tempTrackTotal = meta.get(Meta.TRACK_TOTAL);
+                String songTrackTotal = tempTrackTotal == null || tempTrackTotal.isBlank() ? "UNKNOWN" : tempTrackTotal;
+
+                String tempDate = meta.get(Meta.DATE);
+                String songDate = tempDate == null || tempDate.isBlank() ? "UNKNOWN" : tempDate;
+
+                String songPath = mrls.get(i);
+                var song = new Song(songTitle, songArtist, songGenre, songAlbum, songTrackNumber, songTrackTotal, songDate, songPath);
+
+                //Add the song to the songAlbum's list in the map
+                albumMap.computeIfAbsent(songAlbum, k -> {
+                    // This block is executed only if 'songAlbum' is not already present in albumMap
+                    List<Song> songs = new ArrayList<>();
+                    albumAndUrl.put(songAlbum, meta.get(Meta.ARTWORK_URL));
 
                     return songs;
-                }).add(song); // regardless of whether the key was present in the map or not, the song is added to the List<String> associated with the album.
+                }).add(song); // regardless of whether the key was present in the map or not, the song is added to the associated with the songAlbum.
 
                 media.release();
             } catch (Exception e) {
@@ -399,21 +413,21 @@ public class Json {
      * @param mediaTreeView treeView to be populated
      * @param lblStatus     the statusLbl from playbackController
      */
-    public void loadAlbumArray(String filePath, TreeView<String> mediaTreeView, ListView<String> mediaListView, Label lblStatus) {
+    public void loadAlbumArray(String filePath, TreeView<MediaTreeItem> mediaTreeView, ListView<MediaTreeItem> mediaListView, Label lblStatus) {
 
         ArrayList<Album> albumArray = loadAlbumArrayFromJson(filePath);
 
         if (albumArray != null) {
 
+
             createThumbnailFolder();
-            ObservableList<String> songs = FXCollections.observableArrayList();
+            ObservableList<MediaTreeItem> songs = FXCollections.observableArrayList();
 
             for (int i = 0; i < albumArray.size(); i++) {
                 populateMediaTreeView(albumArray.get(i), mediaTreeView.getRoot().getChildren(), i, songs);
             }
 
             mediaListView.setItems(songs);
-
             Platform.runLater(() -> lblStatus.setText("Loaded " + albumArray.size() + " albums!"));
 
         }
@@ -425,28 +439,43 @@ public class Json {
      * TreeItem to represent it, sets a thumbnail for it, and finally populates
      * it with the album's songs.
      *
-     * @param album    the album object containing its info
-     * @param children the children of the mediaTreeView's root
+     * @param album     the album object containing its info
+     * @param rootItems the rootItems of the mediaTreeView's root
      */
-    private void populateMediaTreeView(Album album, ObservableList<TreeItem<String>> children, int albumIndex,
-                                       ObservableList<String> songsList) {
-
-        TreeItem<String> treeItem = new TreeItem<>(album.albumName());
-
-        children.add(treeItem);
-
-        try {
-            setTreeItemGraphic(treeItem, album, albumIndex);
-        } catch (Exception ignored) {
-
-        }
+    private void populateMediaTreeView(Album album, ObservableList<TreeItem<MediaTreeItem>> rootItems, int albumIndex,
+                                       ObservableList<MediaTreeItem> songsList) {
 
         // Add each song from the album to the TreeItem as a child
-        album.songs().forEach(song -> {
-            songsList.add(StringFormatter.getFileNameFromMrl(song));
-            treeItem.getChildren().add(new TreeItem<>(StringFormatter.getFileNameFromMrl(song)));
+        ObservableList<TreeItem<MediaTreeItem>> albumTreeItemChildren = FXCollections.observableArrayList();
+
+        album.songs().forEach(
+            song -> {
+                songsList.add(new SongTreeItem(song));
+                albumTreeItemChildren.add(new TreeItem<>(new SongTreeItem(song)));
+            }
+        );
+
+        // No need to continue having the list of songs in memory
+        album.songs().clear();
+
+        // Creation of AlbumTreeItem
+        var albumTreeItem = new TreeItem<MediaTreeItem>(new AlbumTreeItem(album));
+        albumTreeItem.getChildren().setAll(albumTreeItemChildren);
+        albumTreeItem.setExpanded(true);
+        albumTreeItem.expandedProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue) {
+                albumTreeItem.setExpanded(true);
+            }
         });
 
+        // Add the AlbumTreeItem to the root
+        rootItems.add(albumTreeItem);
+
+        // Set the album cover as the graphic for the AlbumTreeItem
+        try {
+            setTreeItemGraphic(albumTreeItem, album, albumIndex);
+        } catch (IOException ignored) {
+        }
     }
 
     /**
@@ -457,12 +486,12 @@ public class Json {
      * An IconImageView object is then created and the thumbnail image is set as its image.
      * Finally, the IconImageView object is set as the graphic for the TreeItem.
      *
-     * @param treeItem   The TreeItem for which the graphic is to be set.
-     * @param album      The Album object representing the album.
-     * @param albumIndex The index of the album.
+     * @param albumTreeItem The TreeItem for which the graphic is to be set.
+     * @param album         The Album object representing the album.
+     * @param albumIndex    The index of the album.
      * @throws IOException If an error occurs when creating the thumbnail image.
      */
-    private void setTreeItemGraphic(TreeItem<String> treeItem, Album album, int albumIndex) throws IOException {
+    private void setTreeItemGraphic(TreeItem<MediaTreeItem> albumTreeItem, Album album, int albumIndex) throws IOException {
 
         // Construct the path to the thumbnail image
         String thumbnailPath = Constants.THUMBNAIL_LOCATION + "/" + albumIndex + ".png";
@@ -478,7 +507,7 @@ public class Json {
         albumCoverMediaView.setImage(new Image(thumbnail.toURI().toURL().toString()));
 
         // Set the IconImageView object as the graphic for the TreeItem
-        treeItem.setGraphic(albumCoverMediaView);
+        albumTreeItem.setGraphic(albumCoverMediaView);
     }
 
     /**

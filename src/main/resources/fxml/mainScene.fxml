@@ -12,6 +12,7 @@
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -22,7 +23,7 @@
                 <Insets />
             </BorderPane.margin>
             <children>
-                <TreeView fx:id="mediaTreeView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="325.0" VBox.vgrow="ALWAYS">
+                <TreeView fx:id="mediaTreeView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="325.0" showRoot="false" VBox.vgrow="ALWAYS">
                     <contextMenu>
                         <ContextMenu>
                             <items>
@@ -61,7 +62,7 @@
     <left>
         <VBox id="menuBarVbox" spacing="5.0" BorderPane.alignment="CENTER">
             <children>
-                <Button fx:id="btnSearch" contentDisplay="GRAPHIC_ONLY" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="50.0" prefWidth="50.0" />
+                <Button fx:id="btnSearch" contentDisplay="GRAPHIC_ONLY" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#addMusicFolder" prefHeight="50.0" prefWidth="50.0" />
                 <Separator styleClass="separator" />
                 <Button fx:id="btnPlaylist" contentDisplay="GRAPHIC_ONLY" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="50.0" prefWidth="50.0" />
                 <Button fx:id="btnAlbum" contentDisplay="GRAPHIC_ONLY" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#switchToAlbumPane" prefHeight="50.0" prefWidth="50.0" />
@@ -77,5 +78,14 @@
             </BorderPane.margin>
         </VBox>
     </left>
+   <top>
+      <HBox fx:id="menuBar" nodeOrientation="RIGHT_TO_LEFT" BorderPane.alignment="CENTER">
+         <children>
+            <Button fx:id="btnClose" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" />
+            <Button fx:id="btnMinMaxWindow" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" />
+            <Button fx:id="btnHide" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" />
+         </children>
+      </HBox>
+   </top>
 
 </BorderPane>

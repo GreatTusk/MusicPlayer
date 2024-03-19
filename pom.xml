@@ -94,6 +94,7 @@
                             <goal>package</goal>
                         </goals>
                         <configuration>
+                            <copyDependencies>false</copyDependencies>
                             <mainClass>com.ch.tusk.main.MusicPlayerFX</mainClass>
                             <bundleJre>true</bundleJre>
                             <jrePath>C:\Users\F776\IdeaProjects\MusicPlayer\target\MusicPlayerFX</jrePath>
@@ -102,8 +103,7 @@
                 </executions>
             </plugin>
 
-
-            <plugin>
+              <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.0</version>

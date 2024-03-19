@@ -26,8 +26,9 @@ public class AlbumTypeAdapter extends TypeAdapter<Album> {
         out.beginObject();  // Start the JSON object.
         out.name("albumName").value(album.albumName());  // Write the album name.
         out.name("songs").beginArray();  // Start the songs array.
-        for (String song : album.songs()) {  // Iterate over each song in the album.
-            out.value(song);  // Write the song to the JSON output.
+        SongTypeAdapter songAdapter = new SongTypeAdapter();
+        for (Song song : album.songs()) {  // Iterate over each song on the album.
+            songAdapter.write(out, song);  // Write the song to the JSON output.
         }
         out.endArray();  // End the songs array.
         out.name("imageURL").value(album.imageURL());  // Write the album image URL.
@@ -44,7 +45,7 @@ public class AlbumTypeAdapter extends TypeAdapter<Album> {
     @Override
     public Album read(JsonReader in) throws IOException {
         String albumName = "", coverUrl = "";
-        List<String> songsArray = null;
+        List<Song> songsArray = null;
 
         in.beginObject();
         while (in.hasNext()) {
@@ -71,11 +72,12 @@ public class AlbumTypeAdapter extends TypeAdapter<Album> {
      * @return List<String> The list of songs that is created from the JSON input.
      * @throws IOException If an I/O error occurs.
      */
-    private List<String> readSongsArray(JsonReader in) throws IOException {
-        List<String> songs = new ArrayList<>();
+    private List<Song> readSongsArray(JsonReader in) throws IOException {
+        List<Song> songs = new ArrayList<>();
         in.beginArray();
+        SongTypeAdapter songAdapter = new SongTypeAdapter();
         while (in.hasNext()) {
-            songs.add(in.nextString());
+            songs.add(songAdapter.read(in));
         }
         in.endArray();
         return songs;
