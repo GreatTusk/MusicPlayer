@@ -206,8 +206,17 @@ public class Json {
         return directories;
     }
 
+    /**
+     * This method checks if a given directory contains any playable audio files.
+     *
+     * @param rootFolder The directory to check for audio files.
+     * @return true if the directory contains at least one playable audio file, false otherwise.
+     */
     public boolean hasPlayableFile(File rootFolder) {
+        // Get a list of all audio files in the directory.
         String[] audioFiles = rootFolder.list(Constants.AUDIO_NAME_FILTER);
+
+        // Return true if the list of audio files is not null and its length is greater than 0.
         return audioFiles != null && audioFiles.length > 0;
     }
 
@@ -449,10 +458,10 @@ public class Json {
         ObservableList<TreeItem<MediaTreeItem>> albumTreeItemChildren = FXCollections.observableArrayList();
 
         album.songs().forEach(
-            song -> {
-                songsList.add(new SongTreeItem(song));
-                albumTreeItemChildren.add(new TreeItem<>(new SongTreeItem(song)));
-            }
+                song -> {
+                    songsList.add(new SongTreeItem(song));
+                    albumTreeItemChildren.add(new TreeItem<>(new SongTreeItem(song)));
+                }
         );
 
         // No need to continue having the list of songs in memory
