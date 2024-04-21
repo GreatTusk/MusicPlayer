@@ -117,7 +117,6 @@ public class PlaybackController implements Initializable {
                     } else {
                         playMedia();
                     }
-
                 });
 
 

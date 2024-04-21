@@ -436,7 +436,7 @@ public class MediaListPlayer {
      * This method allows playing some file after it's been paused.
      */
     public void playMedia() {
-        mediaListPlayer.controls().play();
+        mediaPlayer.controls().play();
     }
 
     public boolean isPlaying() {
